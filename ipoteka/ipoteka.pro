@@ -13,3 +13,4 @@ QT += widgets
 HEADERS += icalc.h mainwidget.h
 FORMS += mainwidget.ui
 SOURCES += icalc.cpp main.cpp mainwidget.cpp
+
