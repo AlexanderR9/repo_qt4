@@ -44,8 +44,15 @@
         <file>images/media-pause.svg</file>
         <file>images/process-stop.svg</file>
         <file>images/view-refresh.svg</file>
-        
         <file>images/send_msg.png</file>
+
+        <file>images/flag/england.png</file>
+        <file>images/flag/china.png</file>
+        <file>images/flag/russia.png</file>
+        <file>images/flag/usa.png</file>
+        <file>images/flag/germany.png</file>
+        <file>images/flag/canada.png</file>
+
 
     </qresource>
 </RCC>
