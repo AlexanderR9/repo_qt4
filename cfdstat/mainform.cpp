@@ -59,11 +59,9 @@ void MainForm::initWidgets()
     connect(divStatWidget(), SIGNAL(signalGetHistoryData(ConfiguratorAbstractData*&)), historyWidget(), SLOT(slotSetHistoryData(ConfiguratorAbstractData*&)));
 
     updateButtons();
-//    qDebug("15");
     historyWidget()->initBagData(); //long
-//    qDebug("16");
     bagWidget()->refresh(); //long
-//    qDebug("17");
+
 }
 void MainForm::updateButtons()
 {

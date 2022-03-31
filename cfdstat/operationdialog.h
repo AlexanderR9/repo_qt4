@@ -24,6 +24,8 @@ protected:
     CompanyInfo cur_company;
 
     ConfiguratorAbstractRecord& m_record;
+    ConfiguratorAbstractData  m_countryData;
+    ConfiguratorAbstractData  m_companyData;
 
     virtual void load();
     virtual void save();
@@ -42,6 +44,10 @@ protected:
 
     bool isCompanyType() const;
     int currentCompany() const;
+    void readGeneralData();
+    QString companyIcon(const QString&) const;
+    void setCompanyIcons();
+
 
 protected slots:
     virtual void slotApply();

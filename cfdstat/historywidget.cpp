@@ -47,7 +47,6 @@ void HistoryWidget::initCalc()
     m_calc->readGeneralData(m_err);
     if (isErr()) {showErr(); return;}
 
-//    qDebug("1");
     if (lCommonSettings.paramValue("calc_divs").toBool())
     {
 	m_calc->updateDivInfo();
@@ -145,7 +144,6 @@ void HistoryWidget::initChart()
 }
 void HistoryWidget::slotPriceChart()
 {	
-//    qDebug("HistoryWidget::slotPriceChart()");
     QList<int> sel_rows = LStatic::selectedRows(pricesTable);
     if (sel_rows.isEmpty()) return;
     
@@ -156,7 +154,6 @@ void HistoryWidget::slotPriceChart()
     QMap<QString, double> map;
     getPricesByID(id, kks, map);    
     chartBox->setTitle(QString("Prices: [%1]  id=%2,  points count %3").arg(co).arg(id).arg(map.count()));
-
 
     QList<QPointF> points;
     convertPricesToPoints(map, points);
@@ -219,11 +216,7 @@ void HistoryWidget::slotEditPrices()
     d.init();
     d.exec();
 
-    if (d.isApply())
-    {
-	setPrice(rec);
-    }
-
+    if (d.isApply()) setPrice(rec);
 }
 void HistoryWidget::slotEditOperation()
 {
@@ -313,14 +306,11 @@ void HistoryWidget::clearQuery()
 }
 void HistoryWidget::slotQuery()
 {
-//    qDebug("HistoryWidget::slotQuery()");
-
     int id_company = companyComboBox->itemData(companyComboBox->currentIndex()).toInt();    
     QString paper = paperTypeComboBox->currentText();    
     QString currency = currencyComboBox->currentText();    
     QString operation = operationTypeComboBox->currentText();    
     QString text = searchLineEdit->text().trimmed();
-
 
     ///////////////////// check operations table //////////////////////////////
     int vn = 0;
@@ -333,7 +323,6 @@ void HistoryWidget::slotQuery()
 	if ((id_company != 0) && (cid != id_company)) visible = false;
 	if ((currency != "none") && (companyCurrencyByID(cid) != currency)) visible = false;
 	if ((paper != "none") && (historyTable->item(i, 3)->text() != paper)) visible = false;
-//	if ((operation != "none") && (historyTable->item(i, 1)->text() != operation)) visible = false;
 	if ((operation != "none") && !operation.contains(historyTable->item(i, 1)->text())) visible = false;
 
 	if (visible && !text.isEmpty())
@@ -390,12 +379,10 @@ void HistoryWidget::initTables()
     fillTable(pricesTable);
     LStatic::resizeTableContents(historyTable);
     LStatic::resizeTableContents(pricesTable);
-
     updateColors();
 }
 void HistoryWidget::initTable(QTableWidget *table)
 {
-//    qDebug("HistoryWidget::initTable(QTableWidget *table)");
     if (!table) return;
     LStatic::fullClearTable(table);
 
@@ -433,29 +420,7 @@ void HistoryWidget::sortDataByDate(ConfiguratorAbstractData &data)
 	if (min_index > start_index)
 	    data.replaceRecords(start_index, min_index);
 	start_index++;
-    }
-    
-    
-
-/*
-    int ft = ftDateOperation;
-    if (data.count() < 2 || !data.fields.contains(ft)) return;
-
-    bool was_changed = false;
-    for (int i=1; i<data.count(); i++)
-    {
-	QDate dt1 = QDate::fromString(data.recAt(i-1).record.value(ft), DATE_MASK);
-	QDate dt2 = QDate::fromString(data.recAt(i).record.value(ft), DATE_MASK);
-	if (dt1 > dt2) 
-	{
-	    data.replaceRecords(i-1, i);
-	    was_changed = true;
-	    break;
-	}
-    }
-
-    if (was_changed) sortDataByDate(data);
-    */
+    }    
 }
 void HistoryWidget::fillTable(QTableWidget *table)
 {

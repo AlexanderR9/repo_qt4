@@ -14,6 +14,10 @@
  #include <QColor>
  #include <QTimer>
 
+ #define TIMER_INTERVAL1	900
+ #define TIMER_INTERVAL2	650
+ #define TIMER_INTERVAL3	350
+
 
 /////////// DivStatWidget /////////////////////////////
 DivStatWidget::DivStatWidget(QWidget *parent)
@@ -35,8 +39,40 @@ DivStatWidget::DivStatWidget(QWidget *parent)
 
     QTimer *timer1 = new QTimer(this);
     connect(timer1, SIGNAL(timeout()), this, SLOT(slotTimer()));
-    timer1->start(2000);
+    timer1->start(TIMER_INTERVAL1);
 
+}
+void DivStatWidget::slotTimer()
+{
+    QTimer *t =  qobject_cast<QTimer*>(sender());
+    if (!t) return;
+    t->stop();
+    
+    if (t->interval() == TIMER_INTERVAL1)
+    {
+	initCalc();
+	m_search->exec();
+	t->setInterval(TIMER_INTERVAL2);
+	t->start();
+    }
+    else if (t->interval() == TIMER_INTERVAL2)
+    {
+	ConfiguratorAbstractData *div_data = NULL;
+	emit signalGetDivData(div_data);
+	fillStatTable(div_data);    
+	m_search2->exec();    
+
+	t->setInterval(TIMER_INTERVAL3);
+	t->start();
+    }
+    else if (t->interval() == TIMER_INTERVAL3)
+    {
+	ConfiguratorAbstractData *history_data = NULL;
+	emit signalGetHistoryData(history_data);
+	fillBagTable(history_data);    
+	m_search3->exec();    
+	updateColors();
+    }
 }
 void DivStatWidget::initWidgets()
 {
@@ -72,38 +108,6 @@ void DivStatWidget::initSearchs()
     m_search3->addTable(bagTable, countLabel3);
     m_search3->exec();
 }
-void DivStatWidget::slotTimer()
-{
-    QTimer *t =  qobject_cast<QTimer*>(sender());
-    if (!t) return;
-    t->stop();
-    
-    if (t->interval() == 2000)
-    {
-	initCalc();
-	m_search->exec();
-	t->setInterval(1000);
-	t->start();
-    }
-    else if (t->interval() == 1000)
-    {
-	ConfiguratorAbstractData *div_data = NULL;
-	emit signalGetDivData(div_data);
-	fillStatTable(div_data);    
-	m_search2->exec();    
-
-	t->setInterval(500);
-	t->start();
-    }
-    else if (t->interval() == 500)
-    {
-	ConfiguratorAbstractData *history_data = NULL;
-	emit signalGetHistoryData(history_data);
-	fillBagTable(history_data);    
-	m_search3->exec();    
-	updateColors();
-    }
-}
 void DivStatWidget::initCalc()
 {
     m_calc = new DivCalc(m_data, this);
@@ -121,9 +125,7 @@ void DivStatWidget::slotCalendarChart()
 {
     QList<int> sel_cols = LStatic::selectedCols(calendarTable);
     if (sel_cols.isEmpty()) return;
-    int col = sel_cols.first();
-
-    
+    int col = sel_cols.first();    
     m_chart->removeChart();
     m_chart->setPointSize(4);
     //m_chart->setOnlyPoints(true);
@@ -135,7 +137,6 @@ void DivStatWidget::slotCalendarChart()
     //add points
     QList<QPointF> points;
     QPointF p0(-1, -5);
-    //convertPricesToPoints(map, points);
     for (int j=0; j<calendarTable->rowCount(); j++)
     {
 	if (calendarTable->isRowHidden(j)) continue;
@@ -157,9 +158,6 @@ void DivStatWidget::slotCalendarChart()
 	if (col == 7) p.setY(s.toDouble());
 	p.setX(QDateTime(dt).toTime_t());
 	points.append(p);
-
-	//QDateTime dt;
-	//dt.setTime_t(points.at(j).x());
     }
     m_chart->addChartPoints(points, 0);
     m_chart->updateAxis();
@@ -274,60 +272,9 @@ void DivStatWidget::initChart()
     m_chart->setAxisXType(LChartAxisParams::xvtDate);
     m_chart->setAxisPrecision(0, 1);
     m_chart->setAxisMarksInterval(500, 100);
-//    m_chart->setAxisOffsets(100, 80, -1);
     m_chart->setCrossXAxisTextViewMode(2);
 
 }
-/*
-void HistoryWidget::slotPriceChart()
-{	
-//    qDebug("HistoryWidget::slotPriceChart()");
-    QList<int> sel_rows = LStatic::selectedRows(pricesTable);
-    if (sel_rows.isEmpty()) return;
-    
-    QString co = pricesTable->item(sel_rows.first(), 1)->text();
-    int id = pricesTable->item(sel_rows.first(), 1)->data(Qt::UserRole).toInt(); 
-    QString kks = pricesTable->item(sel_rows.first(), 2)->text(); 
-
-    QMap<QString, double> map;
-    getPricesByID(id, kks, map);    
-    chartBox->setTitle(QString("Prices: [%1]  id=%2,  points count %3").arg(co).arg(id).arg(map.count()));
-
-
-    QList<QPointF> points;
-    convertPricesToPoints(map, points);
-    for (int j=0; j<points.count(); j++)
-    {
-	QDateTime dt;
-	dt.setTime_t(points.at(j).x());
-    }
-    m_chart->clearChartPoints();
-    m_chart->addChartPoints(points, 0);
-    m_chart->updateAxis();
-}
-void HistoryWidget::convertPricesToPoints(const QMap<QString, double> &map, QList<QPointF> &points)
-{
-    points.clear();
-    QStringList keys(map.keys());
-    for (int i=0; i<keys.count(); i++)
-    {
-	QDate dt(QDate::fromString(keys.at(i), DATE_MASK));
-	uint x = QDateTime(dt).toTime_t();
-	double y = map.value(keys.at(i));
-	QPointF p(x, y);
-	if (points.isEmpty()) {points.append(p); continue;}
-	if (x > points.last().x()) {points.append(p); continue;}
-	
-	int index = 0;
-	for (int j=0; j<points.count(); j++)
-	{
-	    if (x > points.at(j).x()) index++;
-	    else break;
-	}
-	points.insert(index, p);
-    }
-}
-*/
 QList<int> DivStatWidget::headerList() const
 {
     QList<int> list;
@@ -349,7 +296,6 @@ QList<int> DivStatWidget::headerList2() const
     list.append(ftCurrency);
     list.append(ftPaperType);
     list.append(ftDivSize);
-//    list.append(ftSumSize);
     list.append(ftNalogSize);
     return list;
 }
@@ -366,7 +312,6 @@ QList<int> DivStatWidget::headerList3() const
 }
 void DivStatWidget::initTables()
 {
-//    qDebug("HistoryWidget::initTable(QTableWidget *table)");
     LStatic::fullClearTable(calendarTable);
     LStatic::fullClearTable(statTable);
     LStatic::fullClearTable(bagTable);
@@ -399,7 +344,6 @@ void DivStatWidget::initTables()
     connect(calendarTable, SIGNAL(itemClicked(QTableWidgetItem*)), this, SLOT(slotCalendarChart()));
     connect(statTable, SIGNAL(itemClicked(QTableWidgetItem*)), this, SLOT(slotStatChart()));
     connect(bagTable, SIGNAL(itemClicked(QTableWidgetItem*)), this, SLOT(slotBagChart()));
-
 }
 void DivStatWidget::fillCalendarTable()
 {
@@ -475,7 +419,6 @@ void DivStatWidget::fillBagTable(ConfiguratorAbstractData *data)
 }
 void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
 {
-//    qDebug("DivStatWidget::fillStatTable");
     if (!data) {qWarning("DivStatWidget::fillStatTable ERR: data is null!"); return;}
 
     double nalog = 0;
@@ -549,10 +492,6 @@ void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
 
     }
 
-//    qDebug()<<QString("dates size %1").arg(dates.count());
-//    for (int i=0; i<dates.count(); i++)
-//	qDebug()<<dates.at(i).toString(DATE_MASK);
-
     LStatic::resizeTableContents(statTable);
 }
 QStringList DivStatWidget::recToRow(const ConfiguratorAbstractRecord &rec, const QList<int> &fields) const
@@ -582,15 +521,4 @@ void DivStatWidget::load(QSettings &settings)
     ba = settings.value(QString("%1/h_splitter2").arg(objectName()), QByteArray()).toByteArray();
     if (!ba.isEmpty()) h_splitter2->restoreState(ba);
 }
-
-
-
-
-
-
-
-
-
-
-
 

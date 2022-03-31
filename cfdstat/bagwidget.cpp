@@ -32,7 +32,7 @@ BagWidget::BagWidget(QWidget *parent)
 
     QTimer *timer1 = new QTimer(this);
     connect(timer1, SIGNAL(timeout()), this, SLOT(slotTimer()));
-    timer1->start(4000);
+    timer1->start(1200);
 }
 void BagWidget::slotTimer()
 {

@@ -6,6 +6,7 @@
 
  #include <QDebug>
  #include <QDate>
+ #include <QDir>
  #include <QMessageBox>
  #include <QComboBox>
 
@@ -17,7 +18,63 @@ OperationDialogBase::OperationDialogBase(ConfiguratorAbstractRecord &rec, QWidge
 	 m_record(rec)
 {
     setObjectName("operation_dialog_base");
+    readGeneralData();
 
+}
+void OperationDialogBase::readGeneralData()
+{
+    m_countryData.generalType = gdCountry;
+    m_companyData.generalType = gdCompany;
+    GeneralDataFileReader::loadDataFormFile(gdCountry, m_countryData);
+    GeneralDataFileReader::loadDataFormFile(gdCompany, m_companyData);
+    
+    if (m_countryData.invalid() || m_companyData.invalid())
+    {
+        QString path = lCommonSettings.paramValue("datapath").toString().trimmed();
+        if (!path.isEmpty())
+        {
+            QDir dir(path);
+            if (dir.exists()) return;
+        }
+        qWarning()<<QObject::tr("Error loading general data, check application settings.  datapath=").arg(path);
+        return;
+    }
+
+    qDebug()<<QString("Data loaded ok!  country count %1,  company count %3").arg(m_countryData.count()).arg(m_companyData.count());
+}
+QString OperationDialogBase::companyIcon(const QString &company_name) const
+{
+    const ConfiguratorAbstractRecord *company_rec = m_companyData.recByFieldValue(ftName, company_name);
+    int id_country = -1;
+    if (company_rec) id_country = company_rec->value(ftCountry, QString("-2")).toInt();
+    if (id_country < 0)
+    {
+        qWarning()<<QString("WARNING: id_country=%1   company_name=%2").arg(id_country).arg(company_name);
+    }
+    else
+    {
+        const ConfiguratorAbstractRecord *country_rec = m_countryData.recByFieldValue(ftID, QString::number(id_country));
+        if (country_rec) return country_rec->value(ftImage);
+    }
+    return QString();
+}
+void OperationDialogBase::setCompanyIcons()
+{
+    QString key = ConfiguratorEnums::xmlAttrNameByType(ftCompany);
+    const SimpleWidget *sw = widgetByKey(key);
+    if (!sw) {qWarning()<<QString("OperationDialogBase::setCompanyIcons(): ERR -  widgetByKey(%1) is NULL").arg(key); return;} 
+
+    int n = sw->comboBox->count();
+    for (int i=0; i<n; i++)
+    {
+        QString company_name = sw->comboBox->itemText(i);
+        QString flag_name = companyIcon(company_name);
+        if (flag_name.length() > 5)
+        {
+            QIcon icon(QString(":/icons/images/flag/%1").arg(flag_name));
+	    sw->comboBox->setItemIcon(i, icon);
+        }
+    }
 }
 void OperationDialogBase::load()
 {
@@ -28,9 +85,7 @@ void OperationDialogBase::load()
     if (sw) 
     {
 	if (company_index < sw->comboBox->count())
-	{
 	    sw->comboBox->setCurrentIndex(company_index);
-	}
     }
 }
 void OperationDialogBase::save()
@@ -122,6 +177,7 @@ void OperationDialogBase::placeSubWidgets()
 void OperationDialogBase::init()
 {
     placeSubWidgets();
+    setCompanyIcons();
     setCaptionsWidth(150);
     addVerticalSpacer();
     setExpandWidgets();
