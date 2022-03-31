@@ -92,6 +92,7 @@ void GeneralDataRecordDialog::init()
 		}
 
 		case ftNote: 
+		case ftImage: 
 		case ftKKS: 
 		case ftDateOffer: 
 		case ftDateCoupon: 

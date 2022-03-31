@@ -16,7 +16,7 @@ enum ConfiguratorGeneralData {gdCFD = 1, gdBond, gdBag, gdHistory, gdPrices, gdC
 enum ConfiguratorFieldType {ftID = 51, ftName, ftShortName, ftKKS, ftCurrency, ftColor, ftCommission, ftDateOffer, ftDateCoupon, ftCouponSize, 
 				ftCouponCount, ftADiv, ftNalogSize, ftRating, ftDebt, ftMarket, ftPDiv, ftCount, ftPrice1, ftPrice, 
 				ftPaperType, ftDateOperation, ftTypeOperation, ftNote, ftCompany, ftCountry, ftBranch, ftPayedSize, ftDifference, ftDivDelay,
-				ftDivSize, ftNalogP, ftSumSize};
+				ftDivSize, ftNalogP, ftSumSize, ftImage};
 
 //после добавления элемента в данное множество необходимо дописать функции: interfaceTextByType
 enum ContextActionType {catAdd = 151, catEdit, catClone, catDelete, catHide, catHideOther, catExpand, catCollapse, catDown, catUp, catLoad, catClear};

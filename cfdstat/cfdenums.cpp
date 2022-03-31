@@ -82,6 +82,7 @@ QList<int> ConfiguratorEnums::fieldTypes()
 	list.append(ftPayedSize);
 	list.append(ftSumSize);
 	list.append(ftDifference);
+	list.append(ftImage);
 
 	return list;
 }
@@ -188,6 +189,7 @@ QString ConfiguratorEnums::interfaceTextByType(int type)
 		case ftTypeOperation:	return QString("Operation type");
 		case ftCompany:		return QObject::tr("Company");
 		case ftCountry:		return QString("Country");
+		case ftImage:		return QString("Image");
 		case ftBranch:		return QString("Branch");
 		case ftPayedSize:	return QString("Payed size");
 		case ftSumSize:		return QString("Sum size");
@@ -284,6 +286,7 @@ QString ConfiguratorEnums::xmlAttrNameByType(int type)
 		case ftTypeOperation:	return QString("type_operation");
 		case ftCompany:		return QString("company");
 		case ftCountry:		return QString("country");
+		case ftImage:		return QString("image");
 		case ftBranch:		return QString("branch");
 		case ftPayedSize:	return QString("payed_size");
 		case ftSumSize:		return QString("sum_size");

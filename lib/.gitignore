@@ -1,1 +1,5 @@
 full_clear
+Makefile
+obj
+moc
+uic

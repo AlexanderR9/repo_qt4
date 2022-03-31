@@ -8,6 +8,9 @@
  #include <QDir>
  #include <QTimer>
 
+ #define COMPANY_COL		0
+ #define TABLE_ROW_HEIGHT	26
+ #define TABLE_ICON_SIZE	24
 
 /////////// BagWidget /////////////////////////////
 BagWidget::BagWidget(QWidget *parent)
@@ -16,6 +19,7 @@ BagWidget::BagWidget(QWidget *parent)
 {
     setupUi(this);
     initTable();
+    readGeneralData();
 
     searchLineEdit->clear();
     listWidget->clear();
@@ -29,13 +33,11 @@ BagWidget::BagWidget(QWidget *parent)
     QTimer *timer1 = new QTimer(this);
     connect(timer1, SIGNAL(timeout()), this, SLOT(slotTimer()));
     timer1->start(4000);
-
 }
 void BagWidget::slotTimer()
 {
     recalcState();
     m_search->exec();
-
     qobject_cast<QTimer*>(sender())->stop();
 }
 void BagWidget::recalcState()
@@ -111,7 +113,38 @@ QList<int> BagWidget::headerList() const
     list << ftPrice; //текущая стоимость всех бумаг
     list << ftDifference; //текущая разница
     list << ftCouponSize; //все полученные дивиденды/купоны по этому инструменту
+    //list << ftCountry; 
     return list;
+}
+void BagWidget::refresh()
+{
+    updateColors();
+    LStatic::resizeTableContents(tableWidget);
+    m_search->exec();
+    updateIcons();
+}
+void BagWidget::updateIcons()
+{
+    int row_count = tableWidget->rowCount();
+    for (int i=0; i<row_count; i++)
+    {
+	tableWidget->setRowHeight(i, TABLE_ROW_HEIGHT);
+	QTableWidgetItem *company_item = tableWidget->item(i, COMPANY_COL);
+	if (!company_item) continue;
+
+	QString company_name = company_item->text();
+	int pos = company_name.indexOf("(");
+	if (pos > 0) company_name = company_name.left(pos).trimmed();
+
+        QString flag_name = companyIcon(company_name);
+	if (flag_name.length() > 5)
+	{
+	    QIcon icon(QString(":/icons/images/flag/%1").arg(flag_name));
+	    //QIcon icon(QString(":/icons/images/b_scale.svg"));
+	    company_item->setIcon(icon);
+	}	
+    }
+
 }
 void BagWidget::updateColors()
 {
@@ -139,11 +172,6 @@ void BagWidget::updateColors()
 	}
     }
 }
-/*
-void BagWidget::setRowColor(int row, const QColor &color)
-{
-}
-*/
 void BagWidget::initTable()
 {
     LStatic::fullClearTable(tableWidget);
@@ -158,27 +186,20 @@ void BagWidget::initTable()
 
     LStatic::setTableHeaders(tableWidget, headers);
     tableWidget->verticalHeader()->hide();
+    tableWidget->setIconSize(QSize(TABLE_ICON_SIZE, TABLE_ICON_SIZE));
 }
 void BagWidget::buy(const ConfiguratorAbstractRecord &rec)
 {
-//    qDebug("BagWidget::buy");
-//    qDebug()<<rec.toString();
     emit signalNextOperation(opBuy, rec);
-
 }
 void BagWidget::sell(const ConfiguratorAbstractRecord &rec)
 {
     qDebug("BagWidget::sell");
     qDebug()<<rec.toString();
     emit signalNextOperation(opSell, rec);
-
-
 }
 void BagWidget::slotBagUpdate(const ConfiguratorAbstractRecord &rec)
 {
-//    qDebug("BagWidget::slotBagUpdate");
-//    qDebug()<<QString("BagWidget::slotBagUpdate")<<rec.toString();
-    
     QString kks = rec.record.value(ftKKS);
     int id = rec.record.value(ftID).toInt();
     int pos = findRec(id, kks);
@@ -194,22 +215,10 @@ void BagWidget::slotBagUpdate(const ConfiguratorAbstractRecord &rec)
 	QStringList list = recToRow(m_data.recAt(pos));
 	LStatic::setTableRow(pos, tableWidget, list);
     }
-//    return;
-    
-//    updateColors();
-//    m_search->exec();
-//    LStatic::resizeTableContents(tableWidget);
 
     if (rec.record.value(ftCount).toInt() < 0)
 	QMessageBox::critical(this, tr("Critical error"), tr("Paper count < 0 for company - %1").arg(rec.record.value(ftCompany)));
 
-}
-void BagWidget::refresh()
-{
-    updateColors();
-    LStatic::resizeTableContents(tableWidget);
-    
-    m_search->exec();
 }
 QStringList BagWidget::recToRow(const ConfiguratorAbstractRecord &rec) const
 {
@@ -222,6 +231,22 @@ QStringList BagWidget::recToRow(const ConfiguratorAbstractRecord &rec) const
     }
     return list;
 }
+QString BagWidget::companyIcon(const QString &company_name) const
+{
+    const ConfiguratorAbstractRecord *company_rec = m_companyData.recByFieldValue(ftName, company_name);
+    int id_country = -1;
+    if (company_rec) id_country = company_rec->value(ftCountry, QString("-2")).toInt();
+    if (id_country < 0) 
+    {
+	qWarning()<<QString("WARNING: id_country=%1   company_name=%2").arg(id_country).arg(company_name);
+    }
+    else
+    {
+	const ConfiguratorAbstractRecord *country_rec = m_countryData.recByFieldValue(ftID, QString::number(id_country));
+	if (country_rec) return country_rec->value(ftImage);
+    }
+    return QString();
+}
 int BagWidget::findRec(int id, const QString &kks) const
 {
     for (int i=0; i<m_data.count(); i++)
@@ -231,6 +256,30 @@ int BagWidget::findRec(int id, const QString &kks) const
 	    return i;
     }
     return -1;
+}
+void BagWidget::readGeneralData()
+{
+    m_countryData.generalType = gdCountry;
+    m_companyData.generalType = gdCompany;
+    GeneralDataFileReader::loadDataFormFile(gdCountry, m_countryData);
+    GeneralDataFileReader::loadDataFormFile(gdCompany, m_companyData);
+
+    if (m_countryData.invalid() || m_companyData.invalid())
+    {
+        QString path = lCommonSettings.paramValue("datapath").toString().trimmed();
+        if (!path.isEmpty())
+        {
+            QDir dir(path);
+            if (dir.exists()) return;
+        }
+
+        m_err = QObject::tr("Error loading general data, check application settings.");
+        showErr();
+        return;
+    }
+
+    qDebug()<<QString("Data loaded ok!  country count %1,  company count %3").arg(m_countryData.count()).arg(m_companyData.count());
+
 }
 
 

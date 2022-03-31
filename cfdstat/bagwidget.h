@@ -40,15 +40,20 @@ protected:
     BagState u_state; // cfd usd
     BagState b_state; // bonds
 
+    ConfiguratorAbstractData  m_countryData;
+    ConfiguratorAbstractData  m_companyData;
+
+
     void initTable();
     QList<int> headerList() const;
-//    void readGeneralData();
     int findRec(int, const QString&) const;
     QStringList recToRow(const ConfiguratorAbstractRecord&) const;
+    QString companyIcon(const QString&) const;
     void updateColors();
+    void updateIcons();
     void recalcState(const ConfiguratorAbstractRecord&);
     void recalcState();
-//    void setRowColor(int, const QColor&);
+    void readGeneralData();
 
 public slots:
     void slotBagUpdate(const ConfiguratorAbstractRecord&);
