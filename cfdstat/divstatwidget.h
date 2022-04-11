@@ -34,6 +34,10 @@ protected:
     DivCalc *m_calc;
     ConfiguratorAbstractData  m_data;
 
+    void saveTableState(QSettings&, const QTableWidget*);
+    void loadTableState(QSettings&, QTableWidget*);
+
+
     void initChart();
     void initWidgets();
     void initCalc();

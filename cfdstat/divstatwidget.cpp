@@ -51,7 +51,7 @@ void DivStatWidget::slotTimer()
     if (t->interval() == TIMER_INTERVAL1)
     {
 	initCalc();
-	m_search->exec();
+	//m_search->exec();
 	t->setInterval(TIMER_INTERVAL2);
 	t->start();
     }
@@ -60,7 +60,7 @@ void DivStatWidget::slotTimer()
 	ConfiguratorAbstractData *div_data = NULL;
 	emit signalGetDivData(div_data);
 	fillStatTable(div_data);    
-	m_search2->exec();    
+	//m_search2->exec();    
 
 	t->setInterval(TIMER_INTERVAL3);
 	t->start();
@@ -70,7 +70,7 @@ void DivStatWidget::slotTimer()
 	ConfiguratorAbstractData *history_data = NULL;
 	emit signalGetHistoryData(history_data);
 	fillBagTable(history_data);    
-	m_search3->exec();    
+	//m_search3->exec();    
 	updateColors();
     }
 }
@@ -98,15 +98,15 @@ void DivStatWidget::initSearchs()
 {
     m_search = new LSearch(searchLineEdit, this);
     m_search->addTable(calendarTable, countLabel);
-    m_search->exec();
+//    m_search->exec();
 
     m_search2 = new LSearch(searchLineEdit2, this);
     m_search2->addTable(statTable, countLabel2);
-    m_search2->exec();
+//    m_search2->exec();
 
     m_search3 = new LSearch(searchLineEdit3, this);
     m_search3->addTable(bagTable, countLabel3);
-    m_search3->exec();
+//    m_search3->exec();
 }
 void DivStatWidget::initCalc()
 {
@@ -353,7 +353,9 @@ void DivStatWidget::fillCalendarTable()
     for (int i=0; i<m_data.count(); i++)
 	LStatic::addTableRow(calendarTable, recToRow(m_data.records.at(i), m_data.fields));
 
-    LStatic::resizeTableContents(calendarTable);
+    //LStatic::resizeTableContents(calendarTable);
+    calendarTable->resizeRowsToContents();
+
 }
 void DivStatWidget::fillBagTable(ConfiguratorAbstractData *data)
 {
@@ -387,7 +389,7 @@ void DivStatWidget::fillBagTable(ConfiguratorAbstractData *data)
 	commission = rec.record.value(ftCommission).toDouble();
 	if (currency == "usd") {price *= kurs; commission *= kurs;}
 	row_data << QString("%1").arg(QString::number(price, 'f', 1));
-	row_data << QString("%1").arg(QString::number(commission, 'f', 1));
+	row_data << QString("%1").arg(QString::number(commission, 'f', 2));
 
 	int row_index = 0;
 	if (!dates.isEmpty())
@@ -411,11 +413,12 @@ void DivStatWidget::fillBagTable(ConfiguratorAbstractData *data)
 	price += price_item->text().toDouble();
 	commission += commission_item->text().toDouble();
 	
-	price_item->setText(QString("%1/%2").arg(price_item->text()).arg(QString::number(price, 'f', 1)));
-	commission_item->setText(QString("%1/%2").arg(commission_item->text()).arg(QString::number(commission, 'f', 1)));
+	price_item->setText(QString("%1/%2").arg(price_item->text()).arg(QString::number(price, 'f', 0)));
+	commission_item->setText(QString("%1/%2").arg(commission_item->text()).arg(QString::number(commission, 'f', 0)));
     }
 
-    LStatic::resizeTableContents(bagTable);
+    //LStatic::resizeTableContents(bagTable);
+    bagTable->resizeRowsToContents();
 }
 void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
 {
@@ -423,7 +426,6 @@ void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
 
     double nalog = 0;
     double divs = 0;
-    int p = 1; //lCommonSettings.paramValue("precision").toInt();
     double kurs = lCommonSettings.paramValue("kurs").toDouble();
 
     QList<QDate> dates;
@@ -451,8 +453,8 @@ void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
 	double div = (p_type == "cfd") ? rec.record.value(ftPrice).toDouble() : rec.record.value(ftCouponSize).toDouble();
 	double nlg = rec.record.value(ftNalogSize).toDouble();
 	if (currency == "usd") {div *= kurs; nlg *= kurs;}
-	row_data << QString("%1").arg(QString::number(div, 'f', p));
-	row_data << QString("%1").arg(QString::number(nlg, 'f', p));
+	row_data << QString("%1").arg(QString::number(div, 'f', 1));
+	row_data << QString("%1").arg(QString::number(nlg, 'f', 2));
 
 	int row_index = 0;
 	if (!dates.isEmpty())
@@ -477,8 +479,8 @@ void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
 	divs += div_item->text().toDouble();
 	nalog += nlg_item->text().toDouble();
 	
-	div_item->setText(QString("%1/%2").arg(div_item->text()).arg(QString::number(divs, 'f', p)));
-	nlg_item->setText(QString("%1/%2").arg(nlg_item->text()).arg(QString::number(nalog, 'f', p)));
+	div_item->setText(QString("%1/%2").arg(div_item->text()).arg(QString::number(divs, 'f', 0)));
+	nlg_item->setText(QString("%1/%2").arg(nlg_item->text()).arg(QString::number(nalog, 'f', 0)));
 	
 	
 	///////////////////find color////////////////////////////////////
@@ -492,7 +494,8 @@ void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
 
     }
 
-    LStatic::resizeTableContents(statTable);
+    //LStatic::resizeTableContents(statTable);
+    statTable->resizeRowsToContents();
 }
 QStringList DivStatWidget::recToRow(const ConfiguratorAbstractRecord &rec, const QList<int> &fields) const
 {
@@ -509,6 +512,9 @@ void DivStatWidget::save(QSettings &settings)
     settings.setValue(QString("%1/v_splitter").arg(objectName()), v_splitter->saveState());
     settings.setValue(QString("%1/h_splitter1").arg(objectName()), h_splitter1->saveState());
     settings.setValue(QString("%1/h_splitter2").arg(objectName()), h_splitter2->saveState());
+    saveTableState(settings, calendarTable);
+    saveTableState(settings, statTable);
+    saveTableState(settings, bagTable);
 }
 void DivStatWidget::load(QSettings &settings)
 {
@@ -520,5 +526,34 @@ void DivStatWidget::load(QSettings &settings)
     if (!ba.isEmpty()) h_splitter1->restoreState(ba);
     ba = settings.value(QString("%1/h_splitter2").arg(objectName()), QByteArray()).toByteArray();
     if (!ba.isEmpty()) h_splitter2->restoreState(ba);
+
+    loadTableState(settings, calendarTable);
+    loadTableState(settings, statTable);
+    loadTableState(settings, bagTable);
 }
+void DivStatWidget::saveTableState(QSettings &settings, const QTableWidget *tw)
+{
+    if (!tw) return;
+
+    QString text = QString("%1/table_state/%2").arg(objectName()).arg(tw->objectName());
+    settings.setValue(text, tw->horizontalHeader()->saveState());
+}
+void DivStatWidget::loadTableState(QSettings &settings, QTableWidget *tw)
+{
+    if (!tw) return;
+
+    QString text = QString("%1/table_state/%2").arg(objectName()).arg(tw->objectName());
+    QByteArray ba = settings.value(text, QByteArray()).toByteArray();
+    if (!ba.isEmpty()) tw->horizontalHeader()->restoreState(ba);
+
+    tw->resizeRowsToContents();
+}
+
+
+
+
+
+
+
+
 
