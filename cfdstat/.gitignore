@@ -3,3 +3,7 @@ data/
 Makefile
 start
 qrc_icons.cpp
+.cproject
+.project
+Makefile.Debug
+Makefile.Release

@@ -29,7 +29,6 @@ BagWidget::BagWidget(QWidget *parent)
     m_search->addTable(tableWidget, countLabel);
     m_search->exec();
 
-
     QTimer *timer1 = new QTimer(this);
     connect(timer1, SIGNAL(timeout()), this, SLOT(slotTimer()));
     timer1->start(1200);
@@ -44,37 +43,37 @@ void BagWidget::recalcState()
 {
     for (int i=0; i<tableWidget->rowCount(); i++)
     {
-	QString v = tableWidget->item(i, 2)->text().trimmed().toLower();
-	QString type = tableWidget->item(i, 3)->text().trimmed().toLower();
-	int count = tableWidget->item(i, 4)->text().toInt();
-	double p = tableWidget->item(i, 5)->text().toDouble();
-	double cs = tableWidget->item(i, 6)->text().toDouble();
-	double d = tableWidget->item(i, 8)->text().toDouble();
+		QString v = tableWidget->item(i, 2)->text().trimmed().toLower();
+		QString type = tableWidget->item(i, 3)->text().trimmed().toLower();
+		int count = tableWidget->item(i, 4)->text().toInt();
+		double p = tableWidget->item(i, 5)->text().toDouble();
+		double cs = tableWidget->item(i, 6)->text().toDouble();
+		double d = tableWidget->item(i, 8)->text().toDouble();
 
-	if (v == "usd")
-	{
-	    u_state.payed += p;
-	    u_state.cur_size += cs;
-	    u_state.div_size += d;
-	    u_state.p_count += count;
-	}
-	else
-	{
-	    if (type =="cfd")
-	    {
-		r_state.payed += p;
-		r_state.cur_size += cs;
-		r_state.div_size += d;
-		r_state.p_count += count;
-	    }
-	    else
-	    {
-		b_state.payed += p;
-		b_state.cur_size += cs;
-		b_state.div_size += d;
-		b_state.p_count += count;
-	    }
-	}
+		if (v == "usd")
+		{
+			u_state.payed += p;
+			u_state.cur_size += cs;
+			u_state.div_size += d;
+			u_state.p_count += count;
+		}
+		else
+		{
+			if (type =="cfd")
+			{
+				r_state.payed += p;
+				r_state.cur_size += cs;
+				r_state.div_size += d;
+				r_state.p_count += count;
+			}
+			else
+			{
+				b_state.payed += p;
+				b_state.cur_size += cs;
+				b_state.div_size += d;
+				b_state.p_count += count;
+			}
+		}
     }
 
     double kurs = lCommonSettings.paramValue("kurs").toDouble();
@@ -88,17 +87,16 @@ void BagWidget::recalcState(const ConfiguratorAbstractRecord &rec)
 {
     if (rec.record.value(ftCurrency).trimmed().toLower() == "usd")
     {
-	u_state.payed += rec.record.value(ftPayedSize).toDouble();
-	u_state.cur_size += rec.record.value(ftPrice).toDouble();
-	u_state.div_size += rec.record.value(ftCouponSize).toDouble();
+		u_state.payed += rec.record.value(ftPayedSize).toDouble();
+		u_state.cur_size += rec.record.value(ftPrice).toDouble();
+		u_state.div_size += rec.record.value(ftCouponSize).toDouble();
     }
     else
     {
-	r_state.payed += rec.record.value(ftPayedSize).toDouble();
-	r_state.cur_size += rec.record.value(ftPrice).toDouble();
-	r_state.div_size += rec.record.value(ftCouponSize).toDouble();
+		r_state.payed += rec.record.value(ftPayedSize).toDouble();
+		r_state.cur_size += rec.record.value(ftPrice).toDouble();
+		r_state.div_size += rec.record.value(ftCouponSize).toDouble();
     }
-
     tableBox->setTitle(QString("State: usd(%1)  rub(%2)").arg(u_state.toStr()).arg(r_state.toStr()));
 }
 QList<int> BagWidget::headerList() const
@@ -128,23 +126,22 @@ void BagWidget::updateIcons()
     int row_count = tableWidget->rowCount();
     for (int i=0; i<row_count; i++)
     {
-	tableWidget->setRowHeight(i, TABLE_ROW_HEIGHT);
-	QTableWidgetItem *company_item = tableWidget->item(i, COMPANY_COL);
-	if (!company_item) continue;
+		tableWidget->setRowHeight(i, TABLE_ROW_HEIGHT);
+		QTableWidgetItem *company_item = tableWidget->item(i, COMPANY_COL);
+		if (!company_item) continue;
 
-	QString company_name = company_item->text();
-	int pos = company_name.indexOf("(");
-	if (pos > 0) company_name = company_name.left(pos).trimmed();
+		QString company_name = company_item->text();
+		int pos = company_name.indexOf("(");
+		if (pos > 0) company_name = company_name.left(pos).trimmed();
 
-        QString flag_name = companyIcon(company_name);
-	if (flag_name.length() > 5)
-	{
-	    QIcon icon(QString(":/icons/images/flag/%1").arg(flag_name));
-	    //QIcon icon(QString(":/icons/images/b_scale.svg"));
-	    company_item->setIcon(icon);
-	}	
+			QString flag_name = companyIcon(company_name);
+		if (flag_name.length() > 5)
+		{
+			QIcon icon(QString(":/icons/images/flag/%1").arg(flag_name));
+			//QIcon icon(QString(":/icons/images/b_scale.svg"));
+			company_item->setIcon(icon);
+		}
     }
-
 }
 void BagWidget::updateColors()
 {
@@ -156,20 +153,20 @@ void BagWidget::updateColors()
 
     for (int i=0; i<tableWidget->rowCount(); i++)
     {
-	double d = tableWidget->item(i, col)->text().toDouble();
-	if (d < 0) tableWidget->item(i, col)->setTextColor(Qt::red);
-	else if (d > 0) tableWidget->item(i, col)->setTextColor(Qt::blue);
+		double d = tableWidget->item(i, col)->text().toDouble();
+		if (d < 0) tableWidget->item(i, col)->setTextColor(Qt::red);
+		else if (d > 0) tableWidget->item(i, col)->setTextColor(Qt::blue);
 
-	//check count	
-	int n = tableWidget->item(i, col_count)->text().toInt();
-	if (n < 0) 
-	{
-	     LStatic::setTableRowColor(tableWidget, i, Qt::red);
-	}
-	else if (n == 0)
-	{
-	     LStatic::setTableRowColor(tableWidget, i, QColor(200, 200, 200));
-	}
+		//check count
+		int n = tableWidget->item(i, col_count)->text().toInt();
+		if (n < 0)
+		{
+			 LStatic::setTableRowColor(tableWidget, i, Qt::red);
+		}
+		else if (n == 0)
+		{
+			 LStatic::setTableRowColor(tableWidget, i, QColor(200, 200, 200));
+		}
     }
 }
 void BagWidget::initTable()
@@ -180,8 +177,8 @@ void BagWidget::initTable()
     QStringList headers;
     for (int i=0; i<fields.count(); i++)
     {
-	if (fields.at(i) == ftPrice) headers.append("Current price");
-	else headers.append(ConfiguratorEnums::interfaceTextByType(fields.at(i)));
+		if (fields.at(i) == ftPrice) headers.append("Current price");
+		else headers.append(ConfiguratorEnums::interfaceTextByType(fields.at(i)));
     }
 
     LStatic::setTableHeaders(tableWidget, headers);
@@ -205,15 +202,15 @@ void BagWidget::slotBagUpdate(const ConfiguratorAbstractRecord &rec)
     int pos = findRec(id, kks);
     if (pos < 0)
     {
-	m_data.records.append(rec);
-	QStringList list = recToRow(m_data.records.last());
-	LStatic::addTableRow(tableWidget, list);
+		m_data.records.append(rec);
+		QStringList list = recToRow(m_data.records.last());
+		LStatic::addTableRow(tableWidget, list);
     }
     else
     {
-	m_data.records[pos].copy(rec);
-	QStringList list = recToRow(m_data.recAt(pos));
-	LStatic::setTableRow(pos, tableWidget, list);
+		m_data.records[pos].copy(rec);
+		QStringList list = recToRow(m_data.recAt(pos));
+		LStatic::setTableRow(pos, tableWidget, list);
     }
 
     if (rec.record.value(ftCount).toInt() < 0)
@@ -226,8 +223,8 @@ QStringList BagWidget::recToRow(const ConfiguratorAbstractRecord &rec) const
     QList<int> keys = headerList();
     for (int i=0; i<keys.count(); i++)
     {
-	QString s = rec.record.value(keys.at(i), QString("???"));
-	list.append(s);
+		QString s = rec.record.value(keys.at(i), QString("???"));
+		list.append(s);
     }
     return list;
 }
@@ -238,12 +235,12 @@ QString BagWidget::companyIcon(const QString &company_name) const
     if (company_rec) id_country = company_rec->value(ftCountry, QString("-2")).toInt();
     if (id_country < 0) 
     {
-	qWarning()<<QString("WARNING: id_country=%1   company_name=%2").arg(id_country).arg(company_name);
+    	qWarning()<<QString("WARNING: id_country=%1   company_name=%2").arg(id_country).arg(company_name);
     }
     else
     {
-	const ConfiguratorAbstractRecord *country_rec = m_countryData.recByFieldValue(ftID, QString::number(id_country));
-	if (country_rec) return country_rec->value(ftImage);
+		const ConfiguratorAbstractRecord *country_rec = m_countryData.recByFieldValue(ftID, QString::number(id_country));
+		if (country_rec) return country_rec->value(ftImage);
     }
     return QString();
 }
@@ -266,20 +263,11 @@ void BagWidget::readGeneralData()
 
     if (m_countryData.invalid() || m_companyData.invalid())
     {
-        QString path = lCommonSettings.paramValue("datapath").toString().trimmed();
-        if (!path.isEmpty())
-        {
-            QDir dir(path);
-            if (dir.exists()) return;
-        }
-
         m_err = QObject::tr("Error loading general data, check application settings.");
         showErr();
         return;
     }
-
-    qDebug()<<QString("Data loaded ok!  country count %1,  company count %3").arg(m_countryData.count()).arg(m_companyData.count());
-
+    qDebug()<<QString("BagWidget::readGeneralData() - Data loaded ok!  country count %1,  company count %3").arg(m_countryData.count()).arg(m_companyData.count());
 }
 
 

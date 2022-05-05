@@ -3,7 +3,6 @@
 
  #include "lmainwidget.h"
  #include "lchildwidget.h"
-// #include "ui_mainwidget.h"
 
 
 class QTabWidget;
@@ -15,7 +14,7 @@ class ConfiguratorGeneralDataWdiget;
 class BagWidget;
 class DivStatWidget;
 class HistoryWidget;
-
+class DivCalc;
 
 
 // MainForm
@@ -25,10 +24,9 @@ class MainForm : public LMainWidget
 public:
     MainForm(QWidget *parent = 0);
 
-
 protected:
-    QStackedWidget *m_stackedWidget;
-//    BoundsCentraWidget *m_boundsWidget;
+    QStackedWidget 		*m_stackedWidget;
+    DivCalc 			*m_divsCalcObj;
 
     QString projectName() const {return "cfdstat";}
     virtual void load();
@@ -37,6 +35,7 @@ protected:
     void initActions();
     void initWidgets();
     void initCommonSettings();
+    void initCalcObj();
 
     QString mainTitle() const;
     void updateButtons();
@@ -54,21 +53,12 @@ protected:
 protected slots:
     void slotAction(int); //virtual slot from parent
     void slotWidgetChanged(int);
-//    void slotSaveData();
-//    void slotStop() {stop();}
-//    void slotUpdateWindowTitle(int, int);
-
-    
-//signals:
-//    void signalSave();
 
 private:
     ConfiguratorGeneralDataWdiget* generalDataWidget() const;
     BagWidget* bagWidget() const;
     DivStatWidget* divStatWidget() const;
-    HistoryWidget* historyWidget() const;
-
-
+    HistoryWidget* operationsHistoryWidget() const;
 
 };
  

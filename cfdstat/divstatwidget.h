@@ -26,13 +26,13 @@ public:
 protected:
     QSplitter *v_splitter;
     QSplitter *h_splitter1;
-    QSplitter *h_splitter2;
+    //QSplitter *h_splitter2;
     LSearch *m_search;
     LSearch *m_search2;
-    LSearch *m_search3;
+    //LSearch *m_search3;
     LChartWidget *m_chart;
-    DivCalc *m_calc;
-    ConfiguratorAbstractData  m_data;
+    //DivCalc *m_calc;
+    //ConfiguratorAbstractData  m_data;
 
     void saveTableState(QSettings&, const QTableWidget*);
     void loadTableState(QSettings&, QTableWidget*);
@@ -40,33 +40,36 @@ protected:
 
     void initChart();
     void initWidgets();
-    void initCalc();
     void initSearchs();
     void initTables();
-    void fillCalendarTable();
-    void fillStatTable(ConfiguratorAbstractData*);
-    void fillBagTable(ConfiguratorAbstractData*);
-    void updateColors();
-    void repaintStatChart(QTableWidget*);
 
     QList<int> headerList() const;
     QList<int> headerList2() const;
-    QList<int> headerList3() const;
+    //QList<int> headerList3() const;
+
+    void fillCalendarTable(const ConfiguratorAbstractData*);
+    void fillStatTable(ConfiguratorAbstractData*);
+    //void fillBagTable(ConfiguratorAbstractData*);
+
+    void updateDaysTo(); //обновить столбец Note в calendarTable (daysTo)
+    void updateColorsCalendar(const ConfiguratorAbstractData*); //раскрасить блоки по месяцам в calendarTable
+    void updateColorsStat(); //обозначить границы переходов на следующий месяц в calendarTable
+    void calcStatChartPoints(int, QList<QPointF>&, QList<QPointF>&);
     QStringList recToRow(const ConfiguratorAbstractRecord&, const QList<int>&) const;
+    QString recField(const ConfiguratorAbstractRecord&, int) const;
 
 signals:
-    void signalGetCompanyByID(int, QString&);
-    void signalGetCurrencyByID(int, QString&);
-    void signalGetDivData(ConfiguratorAbstractData*&);
-    void signalGetHistoryData(ConfiguratorAbstractData*&);
-
+    void signalGetCompanyByID(int, QString&) const;
+    void signalGetCurrencyByID(int, QString&) const;
+    void signalGetDivsData(ConfiguratorAbstractData*&);
+    void signalGetWaitDays(QList<quint8>&);
+    //void signalGetHistoryData(ConfiguratorAbstractData*&);
 
 protected slots:
     void slotTimer();
     void slotCalendarChart();
     void slotStatChart();
-    void slotBagChart();
-
+    //void slotBagChart();
 
 };
 

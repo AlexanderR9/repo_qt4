@@ -7,7 +7,8 @@
  #include "bagwidget.h"
  #include "divstatwidget.h"
  #include "operationdialog.h"
- 
+ #include "divcalc.h"
+
  #include <QDebug>
  #include <QTimer>
  #include <QTabWidget>
@@ -20,10 +21,36 @@
 //////// MainForm ////////////////////////
 MainForm::MainForm(QWidget *parent)
     :LMainWidget(parent),
-    m_stackedWidget(NULL)
+    m_stackedWidget(NULL),
+	m_divsCalcObj(NULL)
 {
     setObjectName("cfd_main_form");
     
+}
+void MainForm::initCalcObj()
+{
+	m_divsCalcObj = new DivCalc(operationsHistoryWidget()->operationsData(), this);
+
+	QString err;
+	m_divsCalcObj->readGeneralData(err);
+    if (!err.isEmpty())
+    {
+    	QMessageBox::critical(this, "Divs calc object", err);
+    	return;
+    }
+
+    m_divsCalcObj->updateDivInfo();
+    if (m_divsCalcObj->isEmpty())
+    {
+    	qWarning()<<QString("MainForm::initCalcObj() WARNING - m_divs data is empty!");
+    	return;
+    }
+
+    connect(divStatWidget(), SIGNAL(signalGetDivsData(ConfiguratorAbstractData*&)), m_divsCalcObj, SLOT(slotSetDivsData(ConfiguratorAbstractData*&)));
+    connect(divStatWidget(), SIGNAL(signalGetWaitDays(QList<quint8>&)), m_divsCalcObj, SLOT(slotGetWaitDays(QList<quint8>&)));
+    connect(operationsHistoryWidget(), SIGNAL(signalGetDivsData(ConfiguratorAbstractData*&)), m_divsCalcObj, SLOT(slotSetDivsData(ConfiguratorAbstractData*&)));
+
+
 }
 void MainForm::initActions()
 {
@@ -51,59 +78,59 @@ void MainForm::initWidgets()
     m_stackedWidget->addWidget(new DivStatWidget(this));		//3	
 
     connect(m_stackedWidget, SIGNAL(currentChanged(int)), this, SLOT(slotWidgetChanged(int)));
-    connect(bagWidget(), SIGNAL(signalNextOperation(int, const ConfiguratorAbstractRecord&)), historyWidget(), SLOT(slotNextOperation(int, const ConfiguratorAbstractRecord&)));
-    connect(historyWidget(), SIGNAL(signalBagUpdate(const ConfiguratorAbstractRecord&)), bagWidget(), SLOT(slotBagUpdate(const ConfiguratorAbstractRecord&)));
-    connect(divStatWidget(), SIGNAL(signalGetCompanyByID(int, QString&)), historyWidget(), SLOT(slotSetCompanyByID(int, QString&)));
-    connect(divStatWidget(), SIGNAL(signalGetCurrencyByID(int, QString&)), historyWidget(), SLOT(slotSetCurrencyByID(int, QString&)));
-    connect(divStatWidget(), SIGNAL(signalGetDivData(ConfiguratorAbstractData*&)), historyWidget(), SIGNAL(signalGetDivData(ConfiguratorAbstractData*&)));
-    connect(divStatWidget(), SIGNAL(signalGetHistoryData(ConfiguratorAbstractData*&)), historyWidget(), SLOT(slotSetHistoryData(ConfiguratorAbstractData*&)));
+    connect(bagWidget(), SIGNAL(signalNextOperation(int, const ConfiguratorAbstractRecord&)), operationsHistoryWidget(), SLOT(slotNextOperation(int, const ConfiguratorAbstractRecord&)));
+    connect(operationsHistoryWidget(), SIGNAL(signalBagUpdate(const ConfiguratorAbstractRecord&)), bagWidget(), SLOT(slotBagUpdate(const ConfiguratorAbstractRecord&)));
+    connect(divStatWidget(), SIGNAL(signalGetCompanyByID(int, QString&)), operationsHistoryWidget(), SLOT(slotSetCompanyByID(int, QString&)));
+    connect(divStatWidget(), SIGNAL(signalGetCurrencyByID(int, QString&)), operationsHistoryWidget(), SLOT(slotSetCurrencyByID(int, QString&)));
+    //connect(divStatWidget(), SIGNAL(signalGetHistoryData(ConfiguratorAbstractData*&)), operationsHistoryWidget(), SLOT(slotSetHistoryData(ConfiguratorAbstractData*&)));
 
     updateButtons();
-    historyWidget()->initBagData(); //long
+    operationsHistoryWidget()->initBagData(); //long
     bagWidget()->refresh(); //long
 
+    initCalcObj();
 }
 void MainForm::updateButtons()
 {
     switch(m_stackedWidget->currentIndex())
     {
-	case 0:
-	{
-	    getAction(atBuy)->setEnabled(false);
-	    getAction(atSell)->setEnabled(false);
-	    getAction(atSave)->setEnabled(true);
-	    getAction(atRefresh)->setEnabled(false);
-	    getAction(atClear)->setEnabled(false);
-	    break;
-	}
-	case 1:
-	{
-	    getAction(atBuy)->setEnabled(true);
-	    getAction(atSell)->setEnabled(true);
-	    getAction(atSave)->setEnabled(false);
-	    getAction(atRefresh)->setEnabled(false);
-	    getAction(atClear)->setEnabled(false);
-	    break;
-	}
-	case 2:
-	{
-	    getAction(atBuy)->setEnabled(true);
-	    getAction(atSell)->setEnabled(true);
-	    getAction(atSave)->setEnabled(true);
-	    getAction(atRefresh)->setEnabled(true);
-	    getAction(atClear)->setEnabled(true);
-	    break;
-	}
-	case 3:
-	{
-	    getAction(atBuy)->setEnabled(false);
-	    getAction(atSell)->setEnabled(false);
-	    getAction(atSave)->setEnabled(false);
-	    getAction(atRefresh)->setEnabled(false);
-	    getAction(atClear)->setEnabled(true);
-	    break;
-	}
-	default: break;
+		case 0:
+		{
+			getAction(atBuy)->setEnabled(false);
+			getAction(atSell)->setEnabled(false);
+			getAction(atSave)->setEnabled(true);
+			getAction(atRefresh)->setEnabled(false);
+			getAction(atClear)->setEnabled(false);
+			break;
+		}
+		case 1:
+		{
+			getAction(atBuy)->setEnabled(true);
+			getAction(atSell)->setEnabled(true);
+			getAction(atSave)->setEnabled(false);
+			getAction(atRefresh)->setEnabled(false);
+			getAction(atClear)->setEnabled(false);
+			break;
+		}
+		case 2:
+		{
+			getAction(atBuy)->setEnabled(true);
+			getAction(atSell)->setEnabled(true);
+			getAction(atSave)->setEnabled(true);
+			getAction(atRefresh)->setEnabled(true);
+			getAction(atClear)->setEnabled(true);
+			break;
+		}
+		case 3:
+		{
+			getAction(atBuy)->setEnabled(false);
+			getAction(atSell)->setEnabled(false);
+			getAction(atSave)->setEnabled(false);
+			getAction(atRefresh)->setEnabled(false);
+			getAction(atClear)->setEnabled(true);
+			break;
+		}
+		default: break;
     }
 }
 void MainForm::slotWidgetChanged(int index)
@@ -174,19 +201,19 @@ void MainForm::slotAction(int type)
 }
 void MainForm::actClearQueryHistory()
 {
-    historyWidget()->clearQuery();
+	operationsHistoryWidget()->clearQuery();
 }
 void MainForm::actUpdatePrices()
 {
     ConfiguratorAbstractRecord result_record;
     UpdatePricesDialog d(result_record, this);
-    connect(&d, SIGNAL(signalGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)), historyWidget(), SLOT(slotGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)));
+    connect(&d, SIGNAL(signalGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)), operationsHistoryWidget(), SLOT(slotGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)));
     d.init();
     d.exec();
     
     if (d.isApply())
     {
-	historyWidget()->setPrice(result_record);
+    	operationsHistoryWidget()->setPrice(result_record);
     }
 }
 void MainForm::actBuy()
@@ -194,7 +221,7 @@ void MainForm::actBuy()
     qDebug("MainForm::actBuy()");
     ConfiguratorAbstractRecord result_record;
     OperationDialog d(opBuy, result_record, this);
-    connect(&d, SIGNAL(signalGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)), historyWidget(), SLOT(slotGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)));
+    connect(&d, SIGNAL(signalGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)), operationsHistoryWidget(), SLOT(slotGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)));
     d.init();
     d.exec();
     
@@ -207,7 +234,7 @@ void MainForm::actSell()
 {
     ConfiguratorAbstractRecord result_record;
     OperationDialog d(opSell, result_record, this);
-    connect(&d, SIGNAL(signalGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)), historyWidget(), SLOT(slotGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)));
+    connect(&d, SIGNAL(signalGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)), operationsHistoryWidget(), SLOT(slotGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)));
     d.init();
     d.exec();
 
@@ -218,28 +245,20 @@ void MainForm::actSell()
 }
 void MainForm::saveCurrentData()
 {
-//    emit signalSaveGeneralData();
     if (!m_stackedWidget) return;
 
     switch(m_stackedWidget->currentIndex())
     {
-	case 0: {generalDataWidget()->slotApply(); break;} //general data
-	case 1: {break;} //bag
-	case 2: {historyWidget()->saveData(); break;} //history
-	default: break;
+		case 0: {generalDataWidget()->slotApply(); break;} //general data
+		case 1: {break;} //bag
+		case 2: {operationsHistoryWidget()->saveData(); break;} //history
+		default: break;
     }
 }
 QString MainForm::mainTitle() const
 {
     return QObject::tr("CFD statistic");
 }
-/*
-void MainForm::slotUpdateWindowTitle(int total, int pay)
-{
-    QString s = QString("%1: total bonds %2,  week pay %3").arg(mainTitle()).arg(total).arg(pay);
-    setWindowTitle(s);
-}
-*/
 void MainForm::load()
 {
     LMainWidget::load();
@@ -297,7 +316,7 @@ BagWidget* MainForm::bagWidget() const
     if (m_stackedWidget->count() < 2) return NULL;
     return qobject_cast<BagWidget*>(m_stackedWidget->widget(1));
 }
-HistoryWidget* MainForm::historyWidget() const
+HistoryWidget* MainForm::operationsHistoryWidget() const
 {
     if (m_stackedWidget->count() < 3) return NULL;
     return qobject_cast<HistoryWidget*>(m_stackedWidget->widget(2));

@@ -5,6 +5,7 @@
  #include "ui_historywidget.h"
  #include "datastructs.h"
 
+#include <QDebug>
 
 class QSplitter;
 class LChartWidget;
@@ -27,6 +28,8 @@ public:
     void initBagData();
     void clearQuery();
 
+    inline const ConfiguratorAbstractData& operationsData() const {return m_operationsData;}
+
 
 protected:
     QSplitter *v_splitter;
@@ -35,7 +38,7 @@ protected:
     ConfiguratorAbstractData  m_pricesData;
     ConfiguratorAbstractData  m_companyData;
     LChartWidget *m_chart;
-    DivCalc *m_calc;		
+    //DivCalc *m_calc;
 
     void readGeneralData();
     void convertCompanyCurrency();
@@ -68,7 +71,7 @@ public slots:
     void slotGetCurrentPrice(const ConfiguratorAbstractRecord&, double&);
     void slotNextOperation(int, const ConfiguratorAbstractRecord&);
     void slotSetCompanyByID(int id, QString &s) {s = companyByID(id);}
-    void slotSetCurrencyByID(int id, QString &s) {s = companyCurrencyByID(id);}
+    void slotSetCurrencyByID(int id, QString &s) {s = companyCurrencyByID(id); /*qDebug()<<QString("HistoryWidget::slotSetCurrencyByID s=%1").arg(s);*/}
     void slotSetHistoryData(ConfiguratorAbstractData *&data) {data = &m_operationsData;}
 
 
@@ -80,7 +83,7 @@ protected slots:
 
 signals:
     void signalBagUpdate(const ConfiguratorAbstractRecord&);
-    void signalGetDivData(ConfiguratorAbstractData*&);
+    void signalGetDivsData(ConfiguratorAbstractData*&);
 
 
 private:

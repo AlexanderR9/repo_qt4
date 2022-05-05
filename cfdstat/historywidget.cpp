@@ -19,8 +19,8 @@ HistoryWidget::HistoryWidget(QWidget *parent)
     :LChildWidget(parent),
     v_splitter(NULL),
     h_splitter(NULL),
-    m_chart(NULL),
-    m_calc(NULL)
+    m_chart(NULL)
+    //m_calc(NULL)
 {
     setupUi(this);
     setObjectName("history_widget");
@@ -30,8 +30,6 @@ HistoryWidget::HistoryWidget(QWidget *parent)
     initCalc();
     initTables();
     initComboboxes();
-//    initBagData();
-//    qDebug("9");
     initChart();
 
     connect(historyTable, SIGNAL(itemDoubleClicked(QTableWidgetItem*)), this, SLOT(slotEditOperation()));
@@ -42,6 +40,7 @@ HistoryWidget::HistoryWidget(QWidget *parent)
 }
 void HistoryWidget::initCalc()
 {
+	/*
     if (invalidData()) return;
     m_calc = new DivCalc(m_operationsData, this);
     m_calc->readGeneralData(m_err);
@@ -49,12 +48,13 @@ void HistoryWidget::initCalc()
 
     if (lCommonSettings.paramValue("calc_divs").toBool())
     {
-	m_calc->updateDivInfo();
-	m_operationsData.addOtherData(m_calc->divInfo());
-	sortDataByDate(m_operationsData); //long
+		m_calc->updateDivInfo();
+		m_operationsData.addOtherData(m_calc->divInfo());
+		sortDataByDate(m_operationsData); //long
     }
 
     connect(this, SIGNAL(signalGetDivData(ConfiguratorAbstractData*&)), m_calc, SLOT(slotSetDivData(ConfiguratorAbstractData*&)));
+    */
 }
 void HistoryWidget::readGeneralData()
 {
@@ -68,19 +68,12 @@ void HistoryWidget::readGeneralData()
 
     if (invalidData())
     {
-	QString path = lCommonSettings.paramValue("datapath").toString().trimmed();
-        if (!path.isEmpty())
-	{
-    	    QDir dir(path);
-    	    if (dir.exists()) return;
-	}
-
-	m_err = QObject::tr("Error loading general data, check application settings.");
-	showErr();
+		m_err = QObject::tr("Error loading general data, check application settings.");
+		showErr();
         return;
     }
 
-    qDebug()<<QString("Data loaded ok!  prices count %1,  operations count %2,  company count %3").arg(m_pricesData.count()).arg(m_operationsData.count()).arg(m_companyData.count());
+    qDebug()<<QString("HistoryWidget::readGeneralData() - Data loaded ok!  prices count %1,  operations count %2,  company count %3").arg(m_pricesData.count()).arg(m_operationsData.count()).arg(m_companyData.count());
     
     sortDataByDate(m_operationsData);
     sortDataByDate(m_pricesData);
@@ -98,35 +91,34 @@ void HistoryWidget::updateColors()
     {
         int id = m_pricesData.recAtValue(i, ftCompany).toInt();
         QString kks = m_pricesData.recAtValue(i, ftKKS).trimmed();
-	QString s = QString("%1*%2").arg(id).arg(kks);
-	if (list.contains(s)) continue;
-	else list.append(s);
+		QString s = QString("%1*%2").arg(id).arg(kks);
+		if (list.contains(s)) continue;
+		else list.append(s);
 
-	QColor color = QColor(255, 255, 255);
-        QDate dt = QDate::fromString(m_pricesData.recAtValue(i, ftDateOperation), DATE_MASK);
-	int d = dt.daysTo(cur_dt);
-//	qDebug()<<QString("id=%1  kks=%2  dt=%3  daysTo=%4").arg(id).arg(kks).arg(dt.toString(DATE_MASK)).arg(d);
+		QColor color = QColor(255, 255, 255);
+		QDate dt = QDate::fromString(m_pricesData.recAtValue(i, ftDateOperation), DATE_MASK);
+		int d = dt.daysTo(cur_dt);
 
-	if (d > 7) color = QColor(250, 250, 230);	
-	if (d > 14) color = QColor(250, 250, 100);	
-	if (d > 21) color = QColor(250, 250, 0);	
-	if (d > 30) color = QColor(250, 150, 0);	
-	if (d > 45) color = QColor(250, 0, 0);	
-	if (d > 60) color = QColor(150, 0, 0);	
-	if (d > 90) color = QColor(50, 70, 20);	
-	colors.append(color);
+		if (d > 7) color = QColor(250, 250, 230);
+		if (d > 14) color = QColor(250, 250, 100);
+		if (d > 21) color = QColor(250, 250, 0);
+		if (d > 30) color = QColor(250, 150, 0);
+		if (d > 45) color = QColor(250, 0, 0);
+		if (d > 60) color = QColor(150, 0, 0);
+		if (d > 90) color = QColor(50, 70, 20);
+		colors.append(color);
     }    
     
     for (int i=m_pricesData.count()-1; i>=0; i--)
     {
         int id = m_pricesData.recAtValue(i, ftCompany).toInt();
         QString kks = m_pricesData.recAtValue(i, ftKKS).trimmed();
-	QString s = QString("%1*%2").arg(id).arg(kks);
-	int pos = list.indexOf(s);
-	if (pos >= 0)
-	{
-	    LStatic::setTableRowColor(pricesTable, i, colors.at(pos));
-	}
+		QString s = QString("%1*%2").arg(id).arg(kks);
+		int pos = list.indexOf(s);
+		if (pos >= 0)
+		{
+			LStatic::setTableRowColor(pricesTable, i, colors.at(pos));
+		}
     }
 }
 void HistoryWidget::initChart()
@@ -159,8 +151,8 @@ void HistoryWidget::slotPriceChart()
     convertPricesToPoints(map, points);
     for (int j=0; j<points.count(); j++)
     {
-	QDateTime dt;
-	dt.setTime_t(points.at(j).x());
+		QDateTime dt;
+		dt.setTime_t(points.at(j).x());
     }
     m_chart->clearChartPoints();
     m_chart->addChartPoints(points, 0);
@@ -172,20 +164,20 @@ void HistoryWidget::convertPricesToPoints(const QMap<QString, double> &map, QLis
     QStringList keys(map.keys());
     for (int i=0; i<keys.count(); i++)
     {
-	QDate dt(QDate::fromString(keys.at(i), DATE_MASK));
-	uint x = QDateTime(dt).toTime_t();
-	double y = map.value(keys.at(i));
-	QPointF p(x, y);
-	if (points.isEmpty()) {points.append(p); continue;}
-	if (x > points.last().x()) {points.append(p); continue;}
-	
-	int index = 0;
-	for (int j=0; j<points.count(); j++)
-	{
-	    if (x > points.at(j).x()) index++;
-	    else break;
-	}
-	points.insert(index, p);
+		QDate dt(QDate::fromString(keys.at(i), DATE_MASK));
+		uint x = QDateTime(dt).toTime_t();
+		double y = map.value(keys.at(i));
+		QPointF p(x, y);
+		if (points.isEmpty()) {points.append(p); continue;}
+		if (x > points.last().x()) {points.append(p); continue;}
+
+		int index = 0;
+		for (int j=0; j<points.count(); j++)
+		{
+			if (x > points.at(j).x()) index++;
+			else break;
+		}
+		points.insert(index, p);
     }
 }
 void HistoryWidget::initBagData()
@@ -193,7 +185,7 @@ void HistoryWidget::initBagData()
     if (invalidData()) return;
 
     for (int i=0; i<m_operationsData.count(); i++)
-	updateBag(m_operationsData.recAt(i));
+    	updateBag(m_operationsData.recAt(i));
 }
 void HistoryWidget::slotEditPrices()
 {
@@ -246,7 +238,7 @@ void HistoryWidget::slotEditOperation()
 
     if (d.isApply())
     {
-	updateOperation(sel_rows.first());
+    	updateOperation(sel_rows.first());
     }
 }
 void HistoryWidget::updateOperation(int row)
@@ -264,13 +256,12 @@ void HistoryWidget::initComboboxes()
     companyComboBox->addItem("none", 0);
     for (int i=0; i<m_companyData.count(); i++)
     {
-	int id = m_companyData.recAtValue(i, ftID).toInt();
-	QString name = m_companyData.recAtValue(i, ftName).trimmed();
-	companyComboBox->addItem(name, id);
+		int id = m_companyData.recAtValue(i, ftID).toInt();
+		QString name = m_companyData.recAtValue(i, ftName).trimmed();
+		companyComboBox->addItem(name, id);
 
-	QString crs = m_companyData.recAtValue(i, ftCurrency).trimmed();
-	if (currencyComboBox->findText(crs) < 0) currencyComboBox->addItem(crs);
-
+		QString crs = m_companyData.recAtValue(i, ftCurrency).trimmed();
+		if (currencyComboBox->findText(crs) < 0) currencyComboBox->addItem(crs);
     }
 
     operationTypeComboBox->clear();
@@ -278,8 +269,8 @@ void HistoryWidget::initComboboxes()
     QList<int> op_list = ConfiguratorEnums::operationTypes();
     for (int i=0; i<op_list.count(); i++)
     {
-	QString text = ConfiguratorEnums::interfaceTextByType(op_list.at(i));
-	operationTypeComboBox->addItem(text, op_list.at(i));
+		QString text = ConfiguratorEnums::interfaceTextByType(op_list.at(i));
+		operationTypeComboBox->addItem(text, op_list.at(i));
     }
     
     paperTypeComboBox->clear();
@@ -318,22 +309,22 @@ void HistoryWidget::slotQuery()
     int cols = historyTable->columnCount();
     for (int i=0; i<rows; i++)
     {
-	int cid = m_operationsData.recAtValue(i, ftCompany).toInt();
-	bool visible = true;
-	if ((id_company != 0) && (cid != id_company)) visible = false;
-	if ((currency != "none") && (companyCurrencyByID(cid) != currency)) visible = false;
-	if ((paper != "none") && (historyTable->item(i, 3)->text() != paper)) visible = false;
-	if ((operation != "none") && !operation.contains(historyTable->item(i, 1)->text())) visible = false;
+		int cid = m_operationsData.recAtValue(i, ftCompany).toInt();
+		bool visible = true;
+		if ((id_company != 0) && (cid != id_company)) visible = false;
+		if ((currency != "none") && (companyCurrencyByID(cid) != currency)) visible = false;
+		if ((paper != "none") && (historyTable->item(i, 3)->text() != paper)) visible = false;
+		if ((operation != "none") && !operation.contains(historyTable->item(i, 1)->text())) visible = false;
 
-	if (visible && !text.isEmpty())
-	{
-	    visible = false;
-	    for (int j=0; j<cols; j++)
-		if (historyTable->item(i, j)->text().contains(text)) {visible = true; break;}
-	}
+		if (visible && !text.isEmpty())
+		{
+			visible = false;
+			for (int j=0; j<cols; j++)
+			if (historyTable->item(i, j)->text().contains(text)) {visible = true; break;}
+		}
 
-	historyTable->setRowHidden(i, !visible);
-	if (visible) vn++;
+		historyTable->setRowHidden(i, !visible);
+		if (visible) vn++;
     }
     operationsLabel->setText(QString("Operations count: %1/%2").arg(vn).arg(rows));
 
@@ -344,26 +335,26 @@ void HistoryWidget::slotQuery()
     cols = pricesTable->columnCount();
     for (int i=0; i<rows; i++)
     {
-	int cid = m_pricesData.recAtValue(i, ftCompany).toInt();
-	QString kks = m_pricesData.recAtValue(i, ftKKS).trimmed();
-	bool visible = true;
-	if ((id_company != 0) && (cid != id_company)) visible = false;
-	if ((currency != "none") && (companyCurrencyByID(cid) != currency)) visible = false;
-	if (paper != "none")
-	{
-	    if (paper == ConfiguratorEnums::interfaceTextByType(gdCFD) && !kks.isEmpty()) visible = false;
-	    if (paper == ConfiguratorEnums::interfaceTextByType(gdBond) && kks.isEmpty()) visible = false;
-	}
+		int cid = m_pricesData.recAtValue(i, ftCompany).toInt();
+		QString kks = m_pricesData.recAtValue(i, ftKKS).trimmed();
+		bool visible = true;
+		if ((id_company != 0) && (cid != id_company)) visible = false;
+		if ((currency != "none") && (companyCurrencyByID(cid) != currency)) visible = false;
+		if (paper != "none")
+		{
+			if (paper == ConfiguratorEnums::interfaceTextByType(gdCFD) && !kks.isEmpty()) visible = false;
+			if (paper == ConfiguratorEnums::interfaceTextByType(gdBond) && kks.isEmpty()) visible = false;
+		}
 
-	if (visible && !text.isEmpty())
-	{
-	    visible = false;
-	    for (int j=0; j<cols; j++)
-		if (pricesTable->item(i, j)->text().contains(text)) {visible = true; break;}
-	}
+		if (visible && !text.isEmpty())
+		{
+			visible = false;
+			for (int j=0; j<cols; j++)
+			if (pricesTable->item(i, j)->text().contains(text)) {visible = true; break;}
+		}
 
-	pricesTable->setRowHidden(i, !visible);
-	if (visible) vn++;
+		pricesTable->setRowHidden(i, !visible);
+		if (visible) vn++;
     }
     pricesLabel->setText(QString("Line count: %1/%2").arg(vn).arg(rows));
 
@@ -402,9 +393,9 @@ int HistoryWidget::findMinDateOperation(const ConfiguratorAbstractData &data, in
     QDate min_dt;
     for (int i=start_index; i<data.count(); i++)
     {
-	QDate dt = QDate::fromString(data.recAt(i).record.value(ftDateOperation), DATE_MASK);
-	if (i == start_index) {min_dt = dt; continue;}
-	if (min_dt > dt) {min_dt = dt; index = i;}
+		QDate dt = QDate::fromString(data.recAt(i).record.value(ftDateOperation), DATE_MASK);
+		if (i == start_index) {min_dt = dt; continue;}
+		if (min_dt > dt) {min_dt = dt; index = i;}
     }
     return index;
 }
@@ -416,10 +407,10 @@ void HistoryWidget::sortDataByDate(ConfiguratorAbstractData &data)
     int start_index = 0;
     while (start_index < data.count())
     {
-	int min_index = findMinDateOperation(data, start_index);
-	if (min_index > start_index)
-	    data.replaceRecords(start_index, min_index);
-	start_index++;
+		int min_index = findMinDateOperation(data, start_index);
+		if (min_index > start_index)
+			data.replaceRecords(start_index, min_index);
+		start_index++;
     }    
 }
 void HistoryWidget::fillTable(QTableWidget *table)
@@ -430,9 +421,9 @@ void HistoryWidget::fillTable(QTableWidget *table)
     const ConfiguratorAbstractData &data = table->objectName().contains("history") ? m_operationsData : m_pricesData;
     for (int i=0; i<data.count(); i++)
     {
-	LStatic::addTableRow(table, recToRow(data.records.at(i), data.fields));
-	if (!table->objectName().contains("history"))
-	    table->item(table->rowCount()-1, 1)->setData(Qt::UserRole, data.recAtValue(i, ftCompany).toInt());
+		LStatic::addTableRow(table, recToRow(data.records.at(i), data.fields));
+		if (!table->objectName().contains("history"))
+			table->item(table->rowCount()-1, 1)->setData(Qt::UserRole, data.recAtValue(i, ftCompany).toInt());
     }
 }
 QStringList HistoryWidget::recToRow(const ConfiguratorAbstractRecord &rec, const QList<int> &fields) const
@@ -441,23 +432,23 @@ QStringList HistoryWidget::recToRow(const ConfiguratorAbstractRecord &rec, const
     bool ok;
     for (int i=0; i<fields.count(); i++)
     {
-	QString s = rec.record.value(fields.at(i), QString("???"));    
-	if (ConfiguratorEnums::isDoubleField(fields.at(i)))
-	{
-	    double d = s.toDouble(&ok);
-	    if (!ok) s = "??";
-	    else s = QString::number(d, 'f', lCommonSettings.paramValue("precision").toInt());
-	}
-	else if (fields.at(i) == ftCompany)
-	{
-	    s = companyByID(s.toInt());
-	}
-	else if (fields.at(i) == ftTypeOperation)
-	{
-	    s = ConfiguratorEnums::interfaceTextByType(s.toInt());
-	}
+		QString s = rec.record.value(fields.at(i), QString("???"));
+		if (ConfiguratorEnums::isDoubleField(fields.at(i)))
+		{
+			double d = s.toDouble(&ok);
+			if (!ok) s = "??";
+			else s = QString::number(d, 'f', lCommonSettings.paramValue("precision").toInt());
+		}
+		else if (fields.at(i) == ftCompany)
+		{
+			s = companyByID(s.toInt());
+		}
+		else if (fields.at(i) == ftTypeOperation)
+		{
+			s = ConfiguratorEnums::interfaceTextByType(s.toInt());
+		}
 
-	list << s;
+		list << s;
     }
 
     return list;
@@ -477,10 +468,10 @@ void HistoryWidget::convertCompanyCurrency()
     int n = m_companyData.count();
     for (int i=0; i<n; i++)
     {
-	int cur_id = m_companyData.recAt(i).record.value(ftCurrency).toInt();
-	const ConfiguratorAbstractRecord *cur_rec = currency_data.recByFieldValue(ftID, QString::number(cur_id));
-	if (!cur_rec) qWarning()<<QString("HistoryWidget::convertCompanyCurrency() ERR: not found currency by id=%1").arg(cur_id);
-	else m_companyData.setRecordValue(i, ftCurrency, cur_rec->record.value(ftName));
+		int cur_id = m_companyData.recAt(i).record.value(ftCurrency).toInt();
+		const ConfiguratorAbstractRecord *cur_rec = currency_data.recByFieldValue(ftID, QString::number(cur_id));
+		if (!cur_rec) qWarning()<<QString("HistoryWidget::convertCompanyCurrency() ERR: not found currency by id=%1").arg(cur_id);
+		else m_companyData.setRecordValue(i, ftCurrency, cur_rec->record.value(ftName));
     }
 }
 void HistoryWidget::initWidgets()
@@ -520,20 +511,21 @@ void HistoryWidget::slotGetCurrentPrice(const ConfiguratorAbstractRecord &rec, d
 
     for (int i=(m_pricesData.count()-1); i>=0; i--)
     {
-	const ConfiguratorAbstractRecord &p_rec = m_pricesData.records.at(i);
-	if ((p_rec.record.value(ftCompany).toInt()) == id && p_rec.record.value(ftKKS).trimmed() == kks)
-	{
-	    p1 = m_pricesData.recAtValue(i, ftPrice1).toDouble();
-	    break;
-	}
+		const ConfiguratorAbstractRecord &p_rec = m_pricesData.records.at(i);
+		if ((p_rec.record.value(ftCompany).toInt()) == id && p_rec.record.value(ftKKS).trimmed() == kks)
+		{
+			p1 = m_pricesData.recAtValue(i, ftPrice1).toDouble();
+			break;
+		}
     }    
 }
 QString HistoryWidget::companyCurrencyByID(int id) const
 {
+	//qDebug()<<QString("HistoryWidget::companyCurrencyByID id=%1").arg(id);
     for (int i=(m_companyData.count()-1); i>=0; i--)
     {
-	if (m_companyData.recAtValue(i, ftID).toInt() == id)
-	    return m_companyData.recAtValue(i, ftCurrency);
+		if (m_companyData.recAtValue(i, ftID).toInt() == id)
+			return m_companyData.recAtValue(i, ftCurrency);
     }
     return "unknown";
 }
@@ -542,21 +534,21 @@ void HistoryWidget::getPricesByID(int id, const QString &kks, QMap<QString, doub
     map.clear();
     for (int i=0; i<m_pricesData.count(); i++)
     {
-	const ConfiguratorAbstractRecord &p_rec = m_pricesData.records.at(i);
-	if (p_rec.record.value(ftCompany).toInt() == id && p_rec.record.value(ftKKS).trimmed() == kks)
-	{
-	    double p = m_pricesData.recAtValue(i, ftPrice1).toDouble();
-	    QString dt = m_pricesData.recAtValue(i, ftDateOperation);
-	    map.insert(dt, p);
-	}
+		const ConfiguratorAbstractRecord &p_rec = m_pricesData.records.at(i);
+		if (p_rec.record.value(ftCompany).toInt() == id && p_rec.record.value(ftKKS).trimmed() == kks)
+		{
+			double p = m_pricesData.recAtValue(i, ftPrice1).toDouble();
+			QString dt = m_pricesData.recAtValue(i, ftDateOperation);
+			map.insert(dt, p);
+		}
     }
 }
 QString HistoryWidget::companyByID(int id) const
 {
     for (int i=(m_companyData.count()-1); i>=0; i--)
     {
-	if (m_companyData.recAtValue(i, ftID).toInt() == id)
-	    return QString("%1 (%2)").arg(m_companyData.recAtValue(i, ftName)).arg(m_companyData.recAtValue(i, ftShortName));
+		if (m_companyData.recAtValue(i, ftID).toInt() == id)
+			return QString("%1 (%2)").arg(m_companyData.recAtValue(i, ftName)).arg(m_companyData.recAtValue(i, ftShortName));
     }
     return "unknown";
 }
@@ -574,15 +566,15 @@ int HistoryWidget::countPaper(int id, const QString &kks) const
     int n = 0;
     for (int i=0; i<m_operationsData.count(); i++)
     {
-	if (m_operationsData.recAt(i).value(ftKKS) == kks && m_operationsData.recAt(i).value(ftCompany).toInt() == id)
-	{	
-	    switch(m_operationsData.recAt(i).value(ftTypeOperation).toInt())
-	    {
-		case opBuy: {n += m_operationsData.recAt(i).value(ftCount).toInt(); break;}
-		case opSell: {n -= m_operationsData.recAt(i).value(ftCount).toInt(); break;}
-		default: break;
-	    }
-	}
+		if (m_operationsData.recAt(i).value(ftKKS) == kks && m_operationsData.recAt(i).value(ftCompany).toInt() == id)
+		{
+			switch(m_operationsData.recAt(i).value(ftTypeOperation).toInt())
+			{
+			case opBuy: {n += m_operationsData.recAt(i).value(ftCount).toInt(); break;}
+			case opSell: {n -= m_operationsData.recAt(i).value(ftCount).toInt(); break;}
+			default: break;
+			}
+		}
     }
     return n;
 }
@@ -591,29 +583,25 @@ double HistoryWidget::payedSize(int id, const QString &kks) const
     double payed = 0;
     for (int i=0; i<m_operationsData.count(); i++)
     {
-	const ConfiguratorAbstractRecord &rec = m_operationsData.recAt(i);
-	int op_type = rec.record.value(ftTypeOperation).toInt();	
+		const ConfiguratorAbstractRecord &rec = m_operationsData.recAt(i);
+		int op_type = rec.record.value(ftTypeOperation).toInt();
 
-	switch(op_type)
-	{
-	    case opBuy:
-	    {
-		if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
-		    payed += rec.record.value(ftPrice).toDouble();
-		break;
-	    }
-	    case opSell:
-	    {
-		if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
-		    payed -= rec.record.value(ftPrice).toDouble();
-		break;
-	    }
-	    default: break;
-	}
-
-//	if (op_type != opBuy) continue;
-//	if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
-//	    payed += rec.record.value(ftPrice).toDouble();
+		switch(op_type)
+		{
+			case opBuy:
+			{
+			if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
+				payed += rec.record.value(ftPrice).toDouble();
+			break;
+			}
+			case opSell:
+			{
+			if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
+				payed -= rec.record.value(ftPrice).toDouble();
+			break;
+			}
+			default: break;
+		}
     }
     return payed;
 }
@@ -622,15 +610,15 @@ double HistoryWidget::divsSize(int id, const QString &kks) const
     double divs = 0;
     for (int i=0; i<m_operationsData.count(); i++)
     {
-	const ConfiguratorAbstractRecord &rec = m_operationsData.recAt(i);
-	int op_type = rec.record.value(ftTypeOperation).toInt();	
-	if ((op_type != opCouponReceive) && (op_type != opDivReceive)) continue;
+		const ConfiguratorAbstractRecord &rec = m_operationsData.recAt(i);
+		int op_type = rec.record.value(ftTypeOperation).toInt();
+		if ((op_type != opCouponReceive) && (op_type != opDivReceive)) continue;
 
-	if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
-	{
-	    if (op_type == opDivReceive) divs += rec.record.value(ftPrice).toDouble();
-	    else divs += rec.record.value(ftCouponSize).toDouble();
-	}
+		if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
+		{
+			if (op_type == opDivReceive) divs += rec.record.value(ftPrice).toDouble();
+			else divs += rec.record.value(ftCouponSize).toDouble();
+		}
     }
     return divs;
 }
@@ -640,24 +628,24 @@ double HistoryWidget::lastPrice(int id, const QString &kks) const
     QDate last_date;
     for (int i=0; i<m_pricesData.count(); i++)
     {
-	const ConfiguratorAbstractRecord &rec = m_pricesData.recAt(i);
-	if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
-	{	
-	    if (p1 < 0)
-	    {
-		p1 = rec.record.value(ftPrice1).toDouble();
-		last_date = QDate::fromString(rec.record.value(ftDateOperation), DATE_MASK);
-	    }
-	    else
-	    {
-		QDate dt = QDate::fromString(rec.record.value(ftDateOperation), DATE_MASK);
-		if (dt > last_date)
+		const ConfiguratorAbstractRecord &rec = m_pricesData.recAt(i);
+		if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
 		{
-		    p1 = rec.record.value(ftPrice1).toDouble();
-		    last_date = dt;
+			if (p1 < 0)
+			{
+				p1 = rec.record.value(ftPrice1).toDouble();
+				last_date = QDate::fromString(rec.record.value(ftDateOperation), DATE_MASK);
+			}
+			else
+			{
+				QDate dt = QDate::fromString(rec.record.value(ftDateOperation), DATE_MASK);
+				if (dt > last_date)
+				{
+					p1 = rec.record.value(ftPrice1).toDouble();
+					last_date = dt;
+				}
+			}
 		}
-	    }
-	}
     }
     return p1;
 }
@@ -670,29 +658,27 @@ void HistoryWidget::setPrice(const ConfiguratorAbstractRecord &rec)
     int pos = -1;
     for (int i=0; i<m_pricesData.count(); i++)
     {
-	
-	if (m_pricesData.recAt(i).value(ftDateOperation) == dt && m_pricesData.recAt(i).value(ftKKS) == kks && 
-		m_pricesData.recAt(i).value(ftCompany).toInt() == id)
-	{
-	    pos = i;
-	    break;
-	}
+		if (m_pricesData.recAt(i).value(ftDateOperation) == dt && m_pricesData.recAt(i).value(ftKKS) == kks && m_pricesData.recAt(i).value(ftCompany).toInt() == id)
+		{
+			pos = i;
+			break;
+		}
     }
 
     if (pos < 0)
     {
-	ConfiguratorAbstractRecord rec2;
-	convertToPricesRecord(rec, rec2);
-        LStatic::addTableRow(pricesTable, recToRow(rec2, m_pricesData.fields));
-	LStatic::resizeTableContents(pricesTable);
-	m_pricesData.records.append(rec2);
-	pricesTable->item(pricesTable->rowCount()-1, 1)->setData(Qt::UserRole, id);
+		ConfiguratorAbstractRecord rec2;
+		convertToPricesRecord(rec, rec2);
+		LStatic::addTableRow(pricesTable, recToRow(rec2, m_pricesData.fields));
+		LStatic::resizeTableContents(pricesTable);
+		m_pricesData.records.append(rec2);
+		pricesTable->item(pricesTable->rowCount()-1, 1)->setData(Qt::UserRole, id);
     }
     else
     {
-	m_pricesData.setRecordValue(pos, ftPrice1, rec.record.value(ftPrice1));
-	QStringList list = recToRow(m_pricesData.recAt(pos), m_pricesData.fields);
-	LStatic::setTableRow(pos, pricesTable, list);
+		m_pricesData.setRecordValue(pos, ftPrice1, rec.record.value(ftPrice1));
+		QStringList list = recToRow(m_pricesData.recAt(pos), m_pricesData.fields);
+		LStatic::setTableRow(pos, pricesTable, list);
     }
 
     updateBag(rec);
@@ -700,10 +686,11 @@ void HistoryWidget::setPrice(const ConfiguratorAbstractRecord &rec)
 }
 void HistoryWidget::saveData()
 {
+	/*
     if (!m_calc->isEmpty())
     {
-	QMessageBox::warning(this, MSGBOX_WARNING_TITLE, QString("Divs list is not empty."));	
-	return;
+		QMessageBox::warning(this, MSGBOX_WARNING_TITLE, QString("Divs list is not empty."));
+		return;
     }
     
     QString f1 = GeneralDataFileReader::xmlFileByType(m_operationsData.generalType);
@@ -718,6 +705,7 @@ void HistoryWidget::saveData()
         GeneralDataFileReader::writeDataToFile(m_pricesData, m_err);
         if (isErr()) {showErr(); return;}
     }
+    */
 }
 void HistoryWidget::slotNextOperation(int op_type, const ConfiguratorAbstractRecord &rec)
 {

@@ -78,35 +78,6 @@
      </layout>
     </widget>
    </item>
-   <item row="0" column="2">
-    <widget class="QGroupBox" name="bagBox">
-     <property name="title">
-      <string>Bag stat</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QLineEdit" name="searchLineEdit3"/>
-      </item>
-      <item>
-       <widget class="QTableWidget" name="bagTable">
-        <property name="selectionMode">
-         <enum>QAbstractItemView::SingleSelection</enum>
-        </property>
-        <property name="selectionBehavior">
-         <enum>QAbstractItemView::SelectColumns</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="countLabel3">
-        <property name="text">
-         <string>TextLabel</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
    <item row="1" column="0" colspan="3">
     <widget class="QGroupBox" name="chartBox">
      <property name="sizePolicy">

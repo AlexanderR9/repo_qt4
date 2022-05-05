@@ -83,6 +83,7 @@ QList<int> ConfiguratorEnums::fieldTypes()
 	list.append(ftSumSize);
 	list.append(ftDifference);
 	list.append(ftImage);
+	list.append(ftResult);
 
 	return list;
 }
@@ -145,6 +146,7 @@ bool ConfiguratorEnums::isDoubleField(int type)
 		case ftPrice:
 		case ftPayedSize:
 		case ftSumSize:
+		//case ftResult:
 		case ftDifference:
 		case ftNalogSize:
 		case ftNalogP:
@@ -194,6 +196,7 @@ QString ConfiguratorEnums::interfaceTextByType(int type)
 		case ftPayedSize:	return QString("Payed size");
 		case ftSumSize:		return QString("Sum size");
 		case ftDifference:	return QString("Difference");
+		case ftResult:		return QString("Result");
 
 
 		// general data
@@ -291,6 +294,7 @@ QString ConfiguratorEnums::xmlAttrNameByType(int type)
 		case ftPayedSize:	return QString("payed_size");
 		case ftSumSize:		return QString("sum_size");
 		case ftDifference:	return QString("difference");
+		case ftResult:		return QString("result");
 
 		default: break;
 	}
