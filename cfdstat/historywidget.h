@@ -46,7 +46,6 @@ protected:
     void initWidgets();
     void initTables();
     void initChart();
-    void initCalc();
     void initComboboxes();
     void initTable(QTableWidget*);
     void fillTable(QTableWidget*);
@@ -65,6 +64,7 @@ protected:
     double divsSize(int, const QString&) const;
     int countPaper(int, const QString&) const;
     void updateColors();
+    void insertDivsToTable(const ConfiguratorAbstractData*);
 
 
 public slots:
@@ -80,6 +80,7 @@ protected slots:
     void slotEditOperation();
     void slotEditPrices();
     void slotPriceChart();
+    void slotTimer();
 
 signals:
     void signalBagUpdate(const ConfiguratorAbstractRecord&);
@@ -88,6 +89,9 @@ signals:
 
 private:
     void convertPricesToPoints(const QMap<QString, double>&, QList<QPointF>&);
+    QStringList divRecToTableRow(const ConfiguratorAbstractRecord &rec) const;
+
+
 
 };
 

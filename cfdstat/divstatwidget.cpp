@@ -326,6 +326,12 @@ void DivStatWidget::fillCalendarTable(const ConfiguratorAbstractData *data)
 {
     LStatic::removeAllRowsTable(calendarTable);
 
+    if (!data)
+    {
+    	qWarning("DivStatWidget::fillCalendarTable WARNING - data is NULL.");
+    	return;
+    }
+
     for (int i=0; i<data->count(); i++)
     	LStatic::addTableRow(calendarTable, recToRow(data->records.at(i), headerList()));
 
@@ -409,7 +415,13 @@ void DivStatWidget::fillBagTable(ConfiguratorAbstractData *data)
 */
 void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
 {
-    if (!data) {qWarning("DivStatWidget::fillStatTable ERR: data is null!"); return;}
+    if (!data)
+    {
+    	qWarning("DivStatWidget::fillStatTable WARNING - data is NULL.");
+    	return;
+    }
+
+
 
     int company_col = headerList().indexOf(ftCompany);
     int currency_col = headerList().indexOf(ftCurrency);

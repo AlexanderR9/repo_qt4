@@ -12,6 +12,9 @@
  #include <QDate>
  #include <QSplitter>
  #include <QColor>
+ #include <QTimer>
+
+ #define TIMER_INTERVAL1	2970
 
 
 /////////// HistoryWidget /////////////////////////////
@@ -20,14 +23,12 @@ HistoryWidget::HistoryWidget(QWidget *parent)
     v_splitter(NULL),
     h_splitter(NULL),
     m_chart(NULL)
-    //m_calc(NULL)
 {
     setupUi(this);
     setObjectName("history_widget");
 
     initWidgets();
     readGeneralData();
-    initCalc();
     initTables();
     initComboboxes();
     initChart();
@@ -37,24 +38,79 @@ HistoryWidget::HistoryWidget(QWidget *parent)
     connect(pricesTable, SIGNAL(itemClicked(QTableWidgetItem*)), this, SLOT(slotPriceChart()));
 
     slotQuery();
-}
-void HistoryWidget::initCalc()
-{
-	/*
-    if (invalidData()) return;
-    m_calc = new DivCalc(m_operationsData, this);
-    m_calc->readGeneralData(m_err);
-    if (isErr()) {showErr(); return;}
 
-    if (lCommonSettings.paramValue("calc_divs").toBool())
+    QTimer *timer1 = new QTimer(this);
+    connect(timer1, SIGNAL(timeout()), this, SLOT(slotTimer()));
+    timer1->start(TIMER_INTERVAL1);
+
+}
+void HistoryWidget::slotTimer()
+{
+    QTimer *t =  qobject_cast<QTimer*>(sender());
+    if (!t) return;
+    t->stop();
+
+	ConfiguratorAbstractData *div_data = NULL;
+	emit signalGetDivsData(div_data);
+	insertDivsToTable(div_data);
+	slotQuery();
+}
+void HistoryWidget::insertDivsToTable(const ConfiguratorAbstractData *data)
+{
+    if (!data)
     {
-		m_calc->updateDivInfo();
-		m_operationsData.addOtherData(m_calc->divInfo());
-		sortDataByDate(m_operationsData); //long
+    	qWarning("HistoryWidget::insertDivsToTable WARNING - data is NULL.");
+    	return;
     }
 
-    connect(this, SIGNAL(signalGetDivData(ConfiguratorAbstractData*&)), m_calc, SLOT(slotSetDivData(ConfiguratorAbstractData*&)));
-    */
+
+	QDate cur_dt = QDate::currentDate();
+    for (int i=0; i<data->count(); i++)
+    {
+    	const ConfiguratorAbstractRecord& div_rec = data->records.at(i);
+    	QDate dt_div = QDate::fromString(div_rec.value(ftDateCoupon), DATE_MASK);
+    	int delay = div_rec.value(ftDivDelay).toInt();
+    	if (cur_dt < dt_div.addDays(delay)) continue;
+    	if (cur_dt < dt_div) break;
+
+
+    	int pos = 0;
+    	for (int j=0; j<historyTable->rowCount(); j++)
+    	{
+    		QDate dt = QDate::fromString(historyTable->item(j, 0)->text(), DATE_MASK);
+    		if (dt_div > dt) pos++;
+    		else break;
+    	}
+    	LStatic::insertTableRow(pos, historyTable, divRecToTableRow(div_rec));
+    }
+}
+QStringList HistoryWidget::divRecToTableRow(const ConfiguratorAbstractRecord &rec) const
+{
+	QStringList list;
+	list.append(rec.value(ftDateCoupon));
+	list.append(ConfiguratorEnums::interfaceTextByType(rec.value(ftTypeOperation).toInt()));
+
+	const ConfiguratorAbstractRecord *company_rec = m_companyData.recByFieldValue(ftID, rec.value(ftCompany));
+	list.append(company_rec ? QString("%1 (%2)").arg(company_rec->value(ftName)).arg(company_rec->value(ftShortName)) : "???");
+
+	int p_type = rec.value(ftKKS).isEmpty() ? gdCFD : gdBond;
+	list.append(ConfiguratorEnums::interfaceTextByType(p_type));
+	list.append(rec.value(ftKKS));
+	list.append("0");
+	list.append(rec.value(ftCount));
+
+	double div_size = rec.value(ftDivSize).toDouble();
+	double nalog_factor = rec.value(ftNalogSize).toDouble();
+	int p_count = rec.value(ftCount).toInt();
+
+	list.append(QString::number(div_size, 'f', lCommonSettings.paramValue("precision").toInt()));
+	list.append("0");
+	list.append(QString::number(div_size*p_count, 'f', lCommonSettings.paramValue("precision").toInt()));
+	list.append(QString::number(div_size*p_count*nalog_factor, 'f', lCommonSettings.paramValue("precision").toInt()));
+
+
+
+	return list;
 }
 void HistoryWidget::readGeneralData()
 {

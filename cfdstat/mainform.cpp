@@ -149,6 +149,7 @@ void MainForm::initCommonSettings()
     QString key = QString("precision");
     lCommonSettings.addParam(QString("Precision values"), LSimpleDialog::sdtIntCombo, key);
     lCommonSettings.setComboList(key, combo_list);
+    lCommonSettings.setDefValue(key, QString("2"));
 
     key = QString("auto_scrolling");
     lCommonSettings.addParam(QString("Auto scrolling tables"), LSimpleDialog::sdtBool, key);
@@ -169,12 +170,15 @@ void MainForm::initCommonSettings()
     key = QString("first_div_date");
     lCommonSettings.addParam(QString("First divs. date"), LSimpleDialog::sdtIntCombo, key);
     lCommonSettings.setComboList(key, combo_list);
+    lCommonSettings.setDefValue(key, QString("2020"));
+
     key = QString("last_div_date");
     lCommonSettings.addParam(QString("Second divs. date"), LSimpleDialog::sdtIntCombo, key);
     lCommonSettings.setComboList(key, combo_list);
+    lCommonSettings.setDefValue(key, QString::number(QDate::currentDate().year()));
 
-    key = QString("calc_divs");
-    lCommonSettings.addParam(QString("Calc divs before start"), LSimpleDialog::sdtBool, key);
+    //key = QString("calc_divs");
+    //lCommonSettings.addParam(QString("Calc divs before start"), LSimpleDialog::sdtBool, key);
 
     key = QString("table_colors");
     lCommonSettings.addParam(QString("Apply tables colors"), LSimpleDialog::sdtBool, key);
@@ -185,18 +189,18 @@ void MainForm::slotAction(int type)
 {
     switch (type)
     {
-	case LMainWidget::atSettings: {actCommonSettings(); break;}
-	case LMainWidget::atSave: {saveCurrentData(); break;}
-	case LMainWidget::atData: {actGeneralData(); break;}
-	case LMainWidget::atChart: {actHistory(); break;}
-	case LMainWidget::atBag: {actBag(); break;}
-	case LMainWidget::atBScale: {actDivStat(); break;}
-	case LMainWidget::atClear: {actClearQueryHistory(); break;}
-	case LMainWidget::atBuy: {actBuy(); break;}
-	case LMainWidget::atSell: {actSell(); break;}
-	case LMainWidget::atRefresh: {actUpdatePrices(); break;}
+		case LMainWidget::atSettings: {actCommonSettings(); break;}
+		case LMainWidget::atSave: {saveCurrentData(); break;}
+		case LMainWidget::atData: {actGeneralData(); break;}
+		case LMainWidget::atChart: {actHistory(); break;}
+		case LMainWidget::atBag: {actBag(); break;}
+		case LMainWidget::atBScale: {actDivStat(); break;}
+		case LMainWidget::atClear: {actClearQueryHistory(); break;}
+		case LMainWidget::atBuy: {actBuy(); break;}
+		case LMainWidget::atSell: {actSell(); break;}
+		case LMainWidget::atRefresh: {actUpdatePrices(); break;}
 
-	default: break;
+		default: break;
     }
 }
 void MainForm::actClearQueryHistory()
