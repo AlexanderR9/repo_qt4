@@ -1,9 +1,9 @@
- #ifndef DIVSTAT_WIDGET_H
- #define DIVSTAT_WIDGET_H
+#ifndef DIVSTAT_WIDGET_H
+#define DIVSTAT_WIDGET_H
 
- #include "lchildwidget.h"
- #include "ui_divstatwidget.h"
- #include "datastructs.h"
+#include "lchildwidget.h"
+#include "ui_divstatwidget.h"
+#include "datastructs.h"
 
 
 class QSplitter;
@@ -26,13 +26,9 @@ public:
 protected:
     QSplitter *v_splitter;
     QSplitter *h_splitter1;
-    //QSplitter *h_splitter2;
     LSearch *m_search;
     LSearch *m_search2;
-    //LSearch *m_search3;
     LChartWidget *m_chart;
-    //DivCalc *m_calc;
-    //ConfiguratorAbstractData  m_data;
 
     void saveTableState(QSettings&, const QTableWidget*);
     void loadTableState(QSettings&, QTableWidget*);
@@ -45,11 +41,8 @@ protected:
 
     QList<int> headerList() const;
     QList<int> headerList2() const;
-    //QList<int> headerList3() const;
-
     void fillCalendarTable(const ConfiguratorAbstractData*);
     void fillStatTable(ConfiguratorAbstractData*);
-    //void fillBagTable(ConfiguratorAbstractData*);
 
     void updateDaysTo(); //обновить столбец Note в calendarTable (daysTo)
     void updateColorsCalendar(const ConfiguratorAbstractData*); //раскрасить блоки по месяцам в calendarTable
@@ -63,18 +56,16 @@ signals:
     void signalGetCurrencyByID(int, QString&) const;
     void signalGetDivsData(ConfiguratorAbstractData*&);
     void signalGetWaitDays(QList<quint8>&);
-    //void signalGetHistoryData(ConfiguratorAbstractData*&);
 
 protected slots:
     void slotTimer();
     void slotCalendarChart();
     void slotStatChart();
-    //void slotBagChart();
 
 };
 
 
 
- #endif
+#endif
 
 

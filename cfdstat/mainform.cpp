@@ -136,8 +136,6 @@ void MainForm::updateButtons()
 void MainForm::slotWidgetChanged(int index)
 {
     Q_UNUSED(index);
-//    qDebug()<<QString("MainForm::slotWidgetChanged: index = %1").arg(index);
-
     updateButtons();
 }
 void MainForm::initCommonSettings()
@@ -222,7 +220,6 @@ void MainForm::actUpdatePrices()
 }
 void MainForm::actBuy()
 {
-    qDebug("MainForm::actBuy()");
     ConfiguratorAbstractRecord result_record;
     OperationDialog d(opBuy, result_record, this);
     connect(&d, SIGNAL(signalGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)), operationsHistoryWidget(), SLOT(slotGetCurrentPrice(const ConfiguratorAbstractRecord&, double&)));
@@ -230,9 +227,7 @@ void MainForm::actBuy()
     d.exec();
     
     if (d.isApply())
-    {
-	bagWidget()->buy(result_record);
-    }
+    	bagWidget()->buy(result_record);
 }
 void MainForm::actSell()
 {
@@ -243,9 +238,7 @@ void MainForm::actSell()
     d.exec();
 
     if (d.isApply())
-    {
-	bagWidget()->sell(result_record);
-    }
+    	bagWidget()->sell(result_record);
 }
 void MainForm::saveCurrentData()
 {

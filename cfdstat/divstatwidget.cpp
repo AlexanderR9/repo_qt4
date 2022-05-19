@@ -1,21 +1,21 @@
- #include "divstatwidget.h"
- #include "lstatic.h"
- #include "cfdenums.h"
- #include "generaldatawidget.h"
- #include "lcommonsettings.h"
- #include "operationdialog.h"
- #include "lchart.h"
- #include "divcalc.h"
+#include "divstatwidget.h"
+#include "lstatic.h"
+#include "cfdenums.h"
+#include "generaldatawidget.h"
+#include "lcommonsettings.h"
+#include "operationdialog.h"
+#include "lchart.h"
+#include "divcalc.h"
 
- #include <QDebug>
- #include <QDir>
- #include <QDate>
- #include <QSplitter>
- #include <QColor>
- #include <QTimer>
- #include <QTest>
+#include <QDebug>
+#include <QDir>
+#include <QDate>
+#include <QSplitter>
+#include <QColor>
+#include <QTimer>
+#include <QTest>
 
- #define TIMER_INTERVAL1	770
+#define TIMER_INTERVAL1	770
 
 
 /////////// DivStatWidget /////////////////////////////
@@ -23,7 +23,6 @@ DivStatWidget::DivStatWidget(QWidget *parent)
     :LChildWidget(parent),
     v_splitter(NULL),
     h_splitter1(NULL),
-    //h_splitter2(NULL),
     m_search(NULL),
     m_search2(NULL),
     m_chart(NULL)
@@ -63,15 +62,8 @@ void DivStatWidget::initWidgets()
     h_splitter1 = new QSplitter(Qt::Horizontal, this);
     v_splitter->addWidget(h_splitter1);
     v_splitter->addWidget(chartBox);
-
-
-    //h_splitter2 = new QSplitter(Qt::Horizontal, this);
-
     h_splitter1->addWidget(calendarBox);
     h_splitter1->addWidget(statBox);
-    //h_splitter1->addWidget(h_splitter2);
-    //h_splitter2->addWidget(bagBox);
-
 }
 void DivStatWidget::initSearchs()
 {
@@ -79,8 +71,6 @@ void DivStatWidget::initSearchs()
     m_search->addTable(calendarTable, countLabel);
     m_search2 = new LSearch(searchLineEdit2, this);
     m_search2->addTable(statTable, countLabel2);
-    //m_search3 = new LSearch(searchLineEdit3, this);
-    //m_search3->addTable(bagTable, countLabel3);
 }
 void DivStatWidget::slotCalendarChart()
 {
@@ -185,12 +175,6 @@ void DivStatWidget::slotStatChart()
 
     m_chart->updateAxis();
 }
-/*
-void DivStatWidget::slotBagChart()
-{
-    repaintStatChart(bagTable);
-}
-*/
 void DivStatWidget::updateColorsCalendar(const ConfiguratorAbstractData *data)
 {
     if (!lCommonSettings.paramValue("table_colors").toBool()) return;
@@ -241,18 +225,15 @@ void DivStatWidget::initChart()
     m_chart->setCrossXAxisTextViewMode(2);
     m_chart->setPointSize(3);
     m_chart->updateAxis();
-
 }
 QList<int> DivStatWidget::headerList() const
 {
     QList<int> list;
     list.append(ftDateCoupon);
-    //list.append(ftDateOperation);
     list.append(ftNote);
     list.append(ftCompany);
     list.append(ftCurrency);
     list.append(ftKKS);
-    //list.append(ftPaperType);
     list.append(ftCouponSize);
     list.append(ftCount);
     return list;
@@ -262,37 +243,23 @@ QList<int> DivStatWidget::headerList2() const
     QList<int> list;
     list.append(ftDateCoupon);
     list.append(ftCompany);
-    //list.append(ftCurrency);
     list.append(ftPaperType);
     list.append(ftDivSize);
     list.append(ftNalogSize);
     list.append(ftResult);
     return list;
 }
-/*
-QList<int> DivStatWidget::headerList3() const
-{
-    QList<int> list;
-    list.append(ftDateOperation);
-    list.append(ftCompany);
-    list.append(ftCurrency);
-    list.append(ftPaperType);
-    list.append(ftPrice);
-    list.append(ftCommission);
-    return list;
-}
-*/
 void DivStatWidget::initTables()
 {
     LStatic::fullClearTable(calendarTable);
     LStatic::fullClearTable(statTable);
-    //LStatic::fullClearTable(bagTable);
 
     QList<int> fields = headerList();
     QStringList headers;
     for (int i=0; i<fields.count(); i++)
     	headers << ConfiguratorEnums::interfaceTextByType(fields.at(i));
     LStatic::setTableHeaders(calendarTable, headers);
+    calendarTable->verticalHeader()->hide();
     
     fields.clear();
     headers.clear();
@@ -302,25 +269,11 @@ void DivStatWidget::initTables()
     	headers << ConfiguratorEnums::interfaceTextByType(fields.at(i));
     	if (i > 2) headers[i].append(", rub.");
     }
-
     LStatic::setTableHeaders(statTable, headers);
-
-    /*
-    fields.clear();
-    headers.clear();
-    fields = headerList3();
-    for (int i=0; i<fields.count(); i++)
-    	headers << ConfiguratorEnums::interfaceTextByType(fields.at(i));
-    LStatic::setTableHeaders(bagTable, headers);
-    */
-
-    calendarTable->verticalHeader()->hide();
     statTable->verticalHeader()->hide();
-    //bagTable->verticalHeader()->hide();
 
     connect(calendarTable, SIGNAL(itemClicked(QTableWidgetItem*)), this, SLOT(slotCalendarChart()));
     connect(statTable, SIGNAL(itemClicked(QTableWidgetItem*)), this, SLOT(slotStatChart()));
-    //connect(bagTable, SIGNAL(itemClicked(QTableWidgetItem*)), this, SLOT(slotBagChart()));
 }
 void DivStatWidget::fillCalendarTable(const ConfiguratorAbstractData *data)
 {
@@ -336,8 +289,9 @@ void DivStatWidget::fillCalendarTable(const ConfiguratorAbstractData *data)
     	LStatic::addTableRow(calendarTable, recToRow(data->records.at(i), headerList()));
 
     updateDaysTo();
-    updateColorsCalendar(data);
+    m_search->exec();
     calendarTable->resizeRowsToContents();
+    updateColorsCalendar(data);
 }
 void DivStatWidget::updateDaysTo()
 {
@@ -350,69 +304,6 @@ void DivStatWidget::updateDaysTo()
 	for (int i=0; i<list.count(); i++)
 		calendarTable->item(i, col)->setText(QString::number(list.at(i)));
 }
-/*
-void DivStatWidget::fillBagTable(ConfiguratorAbstractData *data)
-{
-    qDebug("DivStatWidget::fillBagTable");
-    double price = 0;
-    double commission = 0;
-    double kurs = lCommonSettings.paramValue("kurs").toDouble();
-
-    QList<QDate> dates;
-    QString company, currency;
-    QStringList row_data;
-    LStatic::removeAllRowsTable(bagTable);
-    QString p_type;
-    for (int i=0; i<data->count(); i++)
-    {
-		row_data.clear();
-		const ConfiguratorAbstractRecord &rec = data->records.at(i);
-		if (rec.record.value(ftTypeOperation).toInt() != opBuy) continue;
-
-		int cid = rec.record.value(ftCompany).toInt();
-		p_type = rec.record.value(ftPaperType).trimmed().toLower();
-		row_data << rec.record.value(ftDateOperation);
-		QDate dt = QDate::fromString(row_data.last(), DATE_MASK);
-
-		emit signalGetCompanyByID(cid, company);
-		emit signalGetCurrencyByID(cid, currency);
-		currency = currency.trimmed().toLower();
-		row_data << company << currency << p_type;
-
-		price = rec.record.value(ftPrice).toDouble();
-		commission = rec.record.value(ftCommission).toDouble();
-		if (currency == "usd") {price *= kurs; commission *= kurs;}
-		row_data << QString("%1").arg(QString::number(price, 'f', 1));
-		row_data << QString("%1").arg(QString::number(commission, 'f', 2));
-
-		int row_index = 0;
-		if (!dates.isEmpty())
-		{
-			int nd = dates.count();
-			for (int j=(nd-1); j>=0; j--)
-			if (dt > dates.at(j)) {row_index = j+1; break;}
-		}
-        dates.insert(row_index, dt);
-        LStatic::insertTableRow(row_index, bagTable, row_data);
-    }
-
-
-    price = 0;
-    commission = 0;
-    for (int i=0; i<bagTable->rowCount(); i++)
-    {
-		QTableWidgetItem *price_item = bagTable->item(i, 4);
-		QTableWidgetItem *commission_item = bagTable->item(i, 5);
-	
-		price += price_item->text().toDouble();
-		commission += commission_item->text().toDouble();
-
-		price_item->setText(QString("%1/%2").arg(price_item->text()).arg(QString::number(price, 'f', 0)));
-		commission_item->setText(QString("%1/%2").arg(commission_item->text()).arg(QString::number(commission, 'f', 0)));
-    }
-    bagTable->resizeRowsToContents();
-}
-*/
 void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
 {
     if (!data)
@@ -420,8 +311,6 @@ void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
     	qWarning("DivStatWidget::fillStatTable WARNING - data is NULL.");
     	return;
     }
-
-
 
     int company_col = headerList().indexOf(ftCompany);
     int currency_col = headerList().indexOf(ftCurrency);
@@ -441,10 +330,8 @@ void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
 
     	int delay = rec.value(ftDivDelay).toInt();
     	if (dt_div.addDays(delay) > cur_dt) continue;
-
     	bool is_bond = !rec.value(ftKKS).isEmpty();
     	double f_nalog = rec.value(ftNalogSize).toDouble();
-    	//if (i < 50) qDebug()<<QString("f_nalog=%1").arg(f_nalog);
     	double div_size = rec.value(ftDivSize).toDouble();
     	if (calendarTable->item(i, currency_col)->text().trimmed().toLower() == "usd") div_size *= kurs;
     	double p_count = rec.value(ftCount).toInt();
@@ -453,7 +340,6 @@ void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
     	double x = p_count*div_size;
     	divs_sum += x;
     	nalog_sum += (x*f_nalog);
-
 
     	row_data.clear();
     	row_data.append(rec.value(ftDateCoupon));
@@ -466,6 +352,7 @@ void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
     }
 
     updateColorsStat();
+    m_search2->exec();
     statTable->resizeRowsToContents();
 }
 void DivStatWidget::updateColorsStat()
@@ -526,9 +413,8 @@ void DivStatWidget::save(QSettings &settings)
 {
     settings.setValue(QString("%1/v_splitter").arg(objectName()), v_splitter->saveState());
     settings.setValue(QString("%1/h_splitter1").arg(objectName()), h_splitter1->saveState());
-    //settings.setValue(QString("%1/h_splitter2").arg(objectName()), h_splitter2->saveState());
-    saveTableState(settings, calendarTable);
-    saveTableState(settings, statTable);
+    //saveTableState(settings, calendarTable);
+    //saveTableState(settings, statTable);
     //saveTableState(settings, bagTable);
 }
 void DivStatWidget::load(QSettings &settings)
@@ -539,11 +425,9 @@ void DivStatWidget::load(QSettings &settings)
 
     ba = settings.value(QString("%1/h_splitter1").arg(objectName()), QByteArray()).toByteArray();
     if (!ba.isEmpty()) h_splitter1->restoreState(ba);
-    //ba = settings.value(QString("%1/h_splitter2").arg(objectName()), QByteArray()).toByteArray();
-    //if (!ba.isEmpty()) h_splitter2->restoreState(ba);
 
-    loadTableState(settings, calendarTable);
-    loadTableState(settings, statTable);
+    //loadTableState(settings, calendarTable);
+    //loadTableState(settings, statTable);
     //loadTableState(settings, bagTable);
 }
 void DivStatWidget::saveTableState(QSettings &settings, const QTableWidget *tw)

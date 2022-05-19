@@ -61,6 +61,9 @@ signals:
 private:
     static int company_index;
 
+    void placeCompanySubWidget(const QString&, const QString&);
+    void placeFixFieldSubWidget(int);
+
 };
 
 ///////////////////OperationDialog/////////////////////////////

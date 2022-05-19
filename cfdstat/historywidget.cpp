@@ -82,6 +82,7 @@ void HistoryWidget::insertDivsToTable(const ConfiguratorAbstractData *data)
     		else break;
     	}
     	LStatic::insertTableRow(pos, historyTable, divRecToTableRow(div_rec));
+    	historyTable->item(pos, 0)->setData(Qt::UserRole, -1);
     }
 }
 QStringList HistoryWidget::divRecToTableRow(const ConfiguratorAbstractRecord &rec) const
@@ -280,7 +281,14 @@ void HistoryWidget::slotEditOperation()
         return;
     }
     
-    ConfiguratorAbstractRecord &rec = m_operationsData.records[sel_rows.first()];
+    int pos = historyTable->item(sel_rows.first(), 0)->data(Qt::UserRole).toInt();
+    if (pos < 0)
+    {
+        QMessageBox::warning(this, MSGBOX_WARNING_TITLE, QObject::tr("You can't change record DIV/COUPON"));
+        return;
+    }
+
+    ConfiguratorAbstractRecord &rec = m_operationsData.records[pos];
     int type = rec.record.value(ftTypeOperation).toInt();
     if (type != opBuy && type != opSell)
     {
@@ -294,15 +302,10 @@ void HistoryWidget::slotEditOperation()
 
     if (d.isApply())
     {
-    	updateOperation(sel_rows.first());
+        QStringList list = recToRow(rec, m_operationsData.fields);
+        LStatic::setTableRow(sel_rows.first(), historyTable, list);
+        setPrice(rec);
     }
-}
-void HistoryWidget::updateOperation(int row)
-{
-    QStringList list = recToRow(m_operationsData.recAt(row), m_operationsData.fields);
-    LStatic::setTableRow(row, historyTable, list);
-
-    setPrice(m_operationsData.recAt(row));	
 }
 void HistoryWidget::initComboboxes()
 {
@@ -436,7 +439,7 @@ void HistoryWidget::initTable(QTableWidget *table)
     const QList<int> &fields = table->objectName().contains("history") ? m_operationsData.fields : m_pricesData.fields;
     QStringList headers;
     for (int i=0; i<fields.count(); i++)
-	headers << ConfiguratorEnums::interfaceTextByType(fields.at(i));
+    	headers << ConfiguratorEnums::interfaceTextByType(fields.at(i));
 
     LStatic::setTableHeaders(table, headers);
     table->verticalHeader()->hide();
@@ -479,7 +482,13 @@ void HistoryWidget::fillTable(QTableWidget *table)
     {
 		LStatic::addTableRow(table, recToRow(data.records.at(i), data.fields));
 		if (!table->objectName().contains("history"))
+		{
 			table->item(table->rowCount()-1, 1)->setData(Qt::UserRole, data.recAtValue(i, ftCompany).toInt());
+		}
+		else
+		{
+			table->item(i, 0)->setData(Qt::UserRole, i);
+		}
     }
 }
 QStringList HistoryWidget::recToRow(const ConfiguratorAbstractRecord &rec, const QList<int> &fields) const
@@ -624,11 +633,12 @@ int HistoryWidget::countPaper(int id, const QString &kks) const
     {
 		if (m_operationsData.recAt(i).value(ftKKS) == kks && m_operationsData.recAt(i).value(ftCompany).toInt() == id)
 		{
+			int p_count = m_operationsData.recAt(i).value(ftCount).toInt();
 			switch(m_operationsData.recAt(i).value(ftTypeOperation).toInt())
 			{
-			case opBuy: {n += m_operationsData.recAt(i).value(ftCount).toInt(); break;}
-			case opSell: {n -= m_operationsData.recAt(i).value(ftCount).toInt(); break;}
-			default: break;
+				case opBuy: {n += p_count; break;}
+				case opSell: {n -= p_count; break;}
+				default: break;
 			}
 		}
     }
@@ -707,7 +717,6 @@ double HistoryWidget::lastPrice(int id, const QString &kks) const
 }
 void HistoryWidget::setPrice(const ConfiguratorAbstractRecord &rec)
 {
-    qDebug("HistoryWidget::setPrice");
     QString dt = rec.record.value(ftDateOperation);
     QString kks = rec.record.value(ftKKS);
     int id = rec.record.value(ftCompany).toInt();
@@ -742,13 +751,6 @@ void HistoryWidget::setPrice(const ConfiguratorAbstractRecord &rec)
 }
 void HistoryWidget::saveData()
 {
-	/*
-    if (!m_calc->isEmpty())
-    {
-		QMessageBox::warning(this, MSGBOX_WARNING_TITLE, QString("Divs list is not empty."));
-		return;
-    }
-    
     QString f1 = GeneralDataFileReader::xmlFileByType(m_operationsData.generalType);
     QString f2 = GeneralDataFileReader::xmlFileByType(m_pricesData.generalType);
     QString question = QObject::tr("Are you sure want rewrite files %1 and %2?").arg(f1).arg(f2);
@@ -761,7 +763,6 @@ void HistoryWidget::saveData()
         GeneralDataFileReader::writeDataToFile(m_pricesData, m_err);
         if (isErr()) {showErr(); return;}
     }
-    */
 }
 void HistoryWidget::slotNextOperation(int op_type, const ConfiguratorAbstractRecord &rec)
 {
@@ -773,9 +774,9 @@ void HistoryWidget::slotNextOperation(int op_type, const ConfiguratorAbstractRec
 	m_operationsData.records.last().record.insert(ftNalogSize, QString::number(0));
 
     LStatic::addTableRow(historyTable, recToRow(m_operationsData.records.last(), m_operationsData.fields));
-    LStatic::resizeTableContents(historyTable);
-    
+    historyTable->item(historyTable->rowCount()-1, 0)->setData(Qt::UserRole, m_operationsData.count()-1);
     setPrice(m_operationsData.records.last());	
+    slotQuery();
 }
 void HistoryWidget::updateBag(const ConfiguratorAbstractRecord &rec)
 {
@@ -783,7 +784,11 @@ void HistoryWidget::updateBag(const ConfiguratorAbstractRecord &rec)
     int id = rec.record.value(ftCompany).toInt();
     int count = countPaper(id, kks);
     double p1 = lastPrice(id, kks);
-    if (p1 < 0 || count < 0) {qWarning("HistoryWidget::updateBag - ERR: (p1 < 0 || count < 0)"); return;}
+    if (p1 < 0 || count < 0)
+    {
+    	qWarning()<<QString("HistoryWidget::updateBag - ERR: (p1(%1) < 0 || count(%2) < 0) for id_company %3").arg(p1).arg(count).arg(id);
+    	return;
+    }
     double payed = payedSize(id, kks);
     double diff = p1*count - payed;
     double divs = divsSize(id, kks);
@@ -804,14 +809,5 @@ void HistoryWidget::updateBag(const ConfiguratorAbstractRecord &rec)
 
     emit signalBagUpdate(bag_rec);
 }
-
-
-
-
-
-
-
-
-
 
 

@@ -54,7 +54,7 @@ protected:
     QString companyByID(int) const;
     QString companyCurrencyByID(int) const;
     void getPricesByID(int, const QString&, QMap<QString, double>&);
-    void updateOperation(int);
+   // void updateOperation(int);
     void convertToPricesRecord(const ConfiguratorAbstractRecord&, ConfiguratorAbstractRecord&);
     void sortDataByDate(ConfiguratorAbstractData&);
     int findMinDateOperation(const ConfiguratorAbstractData&, int) const;

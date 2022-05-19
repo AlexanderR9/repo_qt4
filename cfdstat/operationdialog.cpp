@@ -72,7 +72,7 @@ void OperationDialogBase::setCompanyIcons()
         if (flag_name.length() > 5)
         {
             QIcon icon(QString(":/icons/images/flag/%1").arg(flag_name));
-	    sw->comboBox->setItemIcon(i, icon);
+            sw->comboBox->setItemIcon(i, icon);
         }
     }
 }
@@ -84,8 +84,8 @@ void OperationDialogBase::load()
     const SimpleWidget *sw = widgetByKey(key);
     if (sw) 
     {
-	if (company_index < sw->comboBox->count())
-	    sw->comboBox->setCurrentIndex(company_index);
+    	if (company_index < sw->comboBox->count())
+    		sw->comboBox->setCurrentIndex(company_index);
     }
 }
 void OperationDialogBase::save()
@@ -124,55 +124,84 @@ void OperationDialogBase::placeSubWidgets()
     QList<int> fields = fieldsByType();
     for (int i=0; i<fields.count(); i++)
     {
-	int ft = fields.at(i);
-	QString name = ConfiguratorEnums::interfaceTextByType(ft);
+		int ft = fields.at(i);
+		QString name = ConfiguratorEnums::interfaceTextByType(ft);
+		QString key = ConfiguratorEnums::xmlAttrNameByType(ft);
+
+		if (ft == ftCompany) placeCompanySubWidget(name, key);
+		else if (ConfiguratorEnums::isDoubleField(ft)) addSimpleWidget(name, sdtDoubleLine, key, 2);
+		else if (ConfiguratorEnums::isFixField(ft)) placeFixFieldSubWidget(ft);
+		else
+		{
+	        switch(ft)
+	        {
+				case ftKKS:
+				case ftName:
+				case ftPaperType:
+				{
+					addSimpleWidget(name, sdtStringCombo, key);
+					break;
+				}
+				case ftDateOperation:
+				{
+					addSimpleWidget(name, sdtString, key);
+					break;
+				}
+				case ftCount:
+				{
+					addSimpleWidget(name, sdtIntCombo, key);
+					break;
+				}
+				default: break;
+	        }
+		}
+
+
+    } //end for
+}
+void OperationDialogBase::placeFixFieldSubWidget(int ft)
+{
+    QVariantList list;
+    QVariantList user_data;
+
+	QString interface_name = ConfiguratorEnums::interfaceTextByType(ft);
 	QString key = ConfiguratorEnums::xmlAttrNameByType(ft);
+	addSimpleWidget(interface_name, sdtStringCombo, key);
 
-	if (ConfiguratorEnums::isDoubleField(ft))
-	{
-	    addSimpleWidget(name, sdtDoubleLine, key, 2); 
-	    continue;
-	}
-        if (ConfiguratorEnums::isFixField(ft))
-        {
-            addSimpleWidget(name, sdtStringCombo, key);
-            QVariantList list;
-            QVariantList user_data;
-            ConfiguratorAbstractData g_data;
-            GeneralDataFileReader::loadDataFormFile(ConfiguratorEnums::generalTypeByFieldType(ft), g_data);
-            if (g_data.invalid()) break;
-            for (int j=0; j<g_data.count(); j++)
-            {
-                list.append(g_data.recAtValue(j, ftName));
-                user_data.append(g_data.recAtValue(j, ftID));
-            }
-            setComboList(key, list, user_data);
-            continue;
-        }
+    ConfiguratorAbstractData g_data;
+    GeneralDataFileReader::loadDataFormFile(ConfiguratorEnums::generalTypeByFieldType(ft), g_data);
+    if (g_data.invalid()) return;
 
-
-	switch(ft)
-	{
-	    case ftKKS: 
-	    case ftName: 
-	    case ftPaperType: 
-	    {
-	        addSimpleWidget(name, sdtStringCombo, key);
-	        break;
-	    }
-	    case ftDateOperation: 
-	    {
-	        addSimpleWidget(name, sdtString, key);
-	        break;
-	    }
-	    case ftCount: 
-	    {
-	        addSimpleWidget(name, sdtIntCombo, key);
-	        break;
-	    }
-	    default: break;
-        }
+    for (int j=0; j<g_data.count(); j++)
+    {
+        list.append(g_data.recAtValue(j, ftName));
+        user_data.append(g_data.recAtValue(j, ftID));
     }
+
+    setComboList(key, list, user_data);
+}
+void OperationDialogBase::placeCompanySubWidget(const QString &interface_name, const QString &key)
+{
+    QVariantList list;
+    QVariantList user_data;
+	addSimpleWidget(interface_name, sdtStringCombo, key);
+
+    QList<int> country_list;
+    country_list << 2 << 3 << 1;
+    for (int j=0; j<country_list.count(); j++)
+    {
+    	int country = country_list.at(j);
+    	for (int k=0; k<m_companyData.count(); k++)
+    	{
+    		if (m_companyData.recAt(k).value(ftCountry).toInt() == country)
+    		{
+                list.append(m_companyData.recAtValue(k, ftName));
+                user_data.append(m_companyData.recAtValue(k, ftID));
+    		}
+    	}
+    }
+
+    setComboList(key, list, user_data);
 }
 void OperationDialogBase::init()
 {
@@ -445,13 +474,12 @@ void EditPricesDialog::recToPage()
     
     if (!kks.isEmpty())
     {
-//	qDebug()<<QString("kks = %1").arg(kks);
-	field = ftKKS;
-	key = ConfiguratorEnums::xmlAttrNameByType(field);
-	sw = widgetByKey(key);
-	pos = sw->comboBox->findText(kks);
-	if (pos < 0) return;
-	sw->comboBox->setCurrentIndex(pos);
+		field = ftKKS;
+		key = ConfiguratorEnums::xmlAttrNameByType(field);
+		sw = widgetByKey(key);
+		pos = sw->comboBox->findText(kks);
+		if (pos < 0) return;
+		sw->comboBox->setCurrentIndex(pos);
     }
 
     field = ftPrice1;
@@ -479,21 +507,21 @@ OperationDialog::OperationDialog(int type, ConfiguratorAbstractRecord &rec, QWid
         case opBuy: 
         {
     	    setWindowTitle(QObject::tr("Buy operation")); 
-	    setObjectName("buy_dialog");
-	    break;
-	}
-	case opSell: 
-	{
-	    setWindowTitle(QObject::tr("Sell operation")); 
-	    setObjectName("sell_dialog");
-	    break;
-	}
-	default: 
-	{
-	    setWindowTitle(QObject::tr("Unknown operation")); 
-	    setObjectName("unknown_dialog");
-	    return;
-	}
+			setObjectName("buy_dialog");
+			break;
+		}
+		case opSell:
+		{
+			setWindowTitle(QObject::tr("Sell operation"));
+			setObjectName("sell_dialog");
+			break;
+		}
+		default:
+		{
+			setWindowTitle(QObject::tr("Unknown operation"));
+			setObjectName("unknown_dialog");
+			return;
+		}
     }
 }
 void OperationDialog::connectSignalsForCalc()
@@ -521,10 +549,10 @@ void OperationDialog::connectSignalsForCalc()
 
     if (m_type == opSell)
     {
-	key = ConfiguratorEnums::xmlAttrNameByType(ftNalogSize);
-	sw = widgetByKey(key);
-	if (sw)
-	    connect(sw->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(slotCalcSum()));
+		key = ConfiguratorEnums::xmlAttrNameByType(ftNalogSize);
+		sw = widgetByKey(key);
+		if (sw)
+			connect(sw->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(slotCalcSum()));
     }
 }
 void OperationDialog::init()
@@ -604,15 +632,15 @@ QList<int> OperationDialog::fieldsByType() const
     {
         case opBuy: 
         {
-	    list << ftCompany << ftPaperType << ftKKS << ftCouponSize << ftPrice1 << ftCount << ftCommission << ftPrice << ftDateOperation;
-	    break;
-	}
-	case opSell: 
-	{
-	    list << ftCompany << ftPaperType << ftKKS << ftCouponSize << ftPrice1 << ftCount << ftCommission << ftNalogSize << ftPrice << ftDateOperation;
-	    break;
-	}
-	default: break;
+			list << ftCompany << ftPaperType << ftKKS << ftCouponSize << ftPrice1 << ftCount << ftCommission << ftPrice << ftDateOperation;
+			break;
+		}
+		case opSell:
+		{
+			list << ftCompany << ftPaperType << ftKKS << ftCouponSize << ftPrice1 << ftCount << ftCommission << ftNalogSize << ftPrice << ftDateOperation;
+			break;
+		}
+		default: break;
     }
     return list;
 }
@@ -713,13 +741,12 @@ void OperationEditDialog::recToPage()
     
     if (!kks.isEmpty())
     {
-//	qDebug()<<QString("kks = %1").arg(kks);
-	field = ftKKS;
-	key = ConfiguratorEnums::xmlAttrNameByType(field);
-	sw = widgetByKey(key);
-	pos = sw->comboBox->findText(kks);
-	if (pos < 0) return;
-	sw->comboBox->setCurrentIndex(pos);
+		field = ftKKS;
+		key = ConfiguratorEnums::xmlAttrNameByType(field);
+		sw = widgetByKey(key);
+		pos = sw->comboBox->findText(kks);
+		if (pos < 0) return;
+		sw->comboBox->setCurrentIndex(pos);
     }
     
     field = ftCount;
@@ -752,6 +779,14 @@ void OperationEditDialog::recToPage()
     field = ftDateOperation;
     key = ConfiguratorEnums::xmlAttrNameByType(field);
     setWidgetValue(key, m_record.record.value(field));
+
+    if (m_type == opSell)
+    {
+    	field = ftNalogSize;
+		key = ConfiguratorEnums::xmlAttrNameByType(field);
+	    setWidgetValue(key, m_record.record.value(field));
+    }
+
 }
 
 
