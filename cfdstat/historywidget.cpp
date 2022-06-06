@@ -14,7 +14,7 @@
  #include <QColor>
  #include <QTimer>
 
- #define TIMER_INTERVAL1	2970
+ #define TIMER_INTERVAL1	970
 
 
 /////////// HistoryWidget /////////////////////////////
@@ -43,6 +43,7 @@ HistoryWidget::HistoryWidget(QWidget *parent)
     connect(timer1, SIGNAL(timeout()), this, SLOT(slotTimer()));
     timer1->start(TIMER_INTERVAL1);
 
+    currencyComboBox->setEnabled(false);
 }
 void HistoryWidget::slotTimer()
 {
@@ -357,6 +358,8 @@ void HistoryWidget::clearQuery()
 void HistoryWidget::slotQuery()
 {
     int id_company = companyComboBox->itemData(companyComboBox->currentIndex()).toInt();    
+    QString company_by_id = (id_company > 0) ? companyByID(id_company) : QString();
+
     QString paper = paperTypeComboBox->currentText();    
     QString currency = currencyComboBox->currentText();    
     QString operation = operationTypeComboBox->currentText();    
@@ -368,10 +371,12 @@ void HistoryWidget::slotQuery()
     int cols = historyTable->columnCount();
     for (int i=0; i<rows; i++)
     {
-		int cid = m_operationsData.recAtValue(i, ftCompany).toInt();
+		//int cid = m_operationsData.recAtValue(i, ftCompany).toInt();
 		bool visible = true;
-		if ((id_company != 0) && (cid != id_company)) visible = false;
-		if ((currency != "none") && (companyCurrencyByID(cid) != currency)) visible = false;
+		if (!company_by_id.isEmpty() && company_by_id != historyTable->item(i, 2)->text()) visible = false;
+
+		//if ((id_company != 0) && (cid != id_company)) visible = false;
+		//if ((currency != "none") && (companyCurrencyByID(cid) != currency)) visible = false;
 		if ((paper != "none") && (historyTable->item(i, 3)->text() != paper)) visible = false;
 		if ((operation != "none") && !operation.contains(historyTable->item(i, 1)->text())) visible = false;
 
