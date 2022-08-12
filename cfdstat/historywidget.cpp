@@ -14,7 +14,7 @@
  #include <QColor>
  #include <QTimer>
 
- #define TIMER_INTERVAL1	970
+ #define TIMER_INTERVAL1	470
 
 
 /////////// HistoryWidget /////////////////////////////
@@ -28,7 +28,7 @@ HistoryWidget::HistoryWidget(QWidget *parent)
     setObjectName("history_widget");
 
     initWidgets();
-    readGeneralData();
+    readGeneralData(); //загрузка истории операций (без дивов)
     initTables();
     initComboboxes();
     initChart();
@@ -52,9 +52,12 @@ void HistoryWidget::slotTimer()
     t->stop();
 
 	ConfiguratorAbstractData *div_data = NULL;
-	emit signalGetDivsData(div_data);
-	insertDivsToTable(div_data);
-	slotQuery();
+	emit signalGetDivsData(div_data); //запрос истории выплат дивов и купонов у DivCalc
+	insertDivsToTable(div_data);	//вставка в таблицу записей дивов и купонов в состветствии с датой
+	slotQuery(); //применение фильтра
+
+	//updateBagDivsData(div_data);
+	initBagData(div_data);
 }
 void HistoryWidget::insertDivsToTable(const ConfiguratorAbstractData *data)
 {
@@ -74,7 +77,6 @@ void HistoryWidget::insertDivsToTable(const ConfiguratorAbstractData *data)
     	if (cur_dt < dt_div.addDays(delay)) continue;
     	if (cur_dt < dt_div) break;
 
-
     	int pos = 0;
     	for (int j=0; j<historyTable->rowCount(); j++)
     	{
@@ -82,7 +84,7 @@ void HistoryWidget::insertDivsToTable(const ConfiguratorAbstractData *data)
     		if (dt_div > dt) pos++;
     		else break;
     	}
-    	LStatic::insertTableRow(pos, historyTable, divRecToTableRow(div_rec));
+    	LStatic::insertTableRow(pos, historyTable, divRecToTableRow(div_rec), Qt::AlignCenter, Qt::black, QColor(220, 250, 220));
     	historyTable->item(pos, 0)->setData(Qt::UserRole, -1);
     }
 }
@@ -238,12 +240,25 @@ void HistoryWidget::convertPricesToPoints(const QMap<QString, double> &map, QLis
 		points.insert(index, p);
     }
 }
-void HistoryWidget::initBagData()
+void HistoryWidget::initBagData(const ConfiguratorAbstractData *div_data)
 {
     if (invalidData()) return;
 
+    QStringList exist_data;
     for (int i=0; i<m_operationsData.count(); i++)
-    	updateBag(m_operationsData.recAt(i));
+    {
+        int id = m_operationsData.recAt(i).record.value(ftCompany).toInt();
+        QString kks = m_operationsData.recAt(i).record.value(ftKKS);
+        QString e_key = QString("%1_%2").arg(id).arg(kks.trimmed().toLower());
+        if (exist_data.contains(e_key)) continue;
+
+        double div_size = divsSize(id, kks, div_data);
+        //if (id == 103) qDebug()<<QString("div_size=%1").arg(div_size);
+    	updateBag(m_operationsData.recAt(i), div_size);
+    	exist_data.append(e_key);
+    }
+
+    emit signalBagRefreshTable();
 }
 void HistoryWidget::slotEditPrices()
 {
@@ -371,12 +386,8 @@ void HistoryWidget::slotQuery()
     int cols = historyTable->columnCount();
     for (int i=0; i<rows; i++)
     {
-		//int cid = m_operationsData.recAtValue(i, ftCompany).toInt();
 		bool visible = true;
 		if (!company_by_id.isEmpty() && company_by_id != historyTable->item(i, 2)->text()) visible = false;
-
-		//if ((id_company != 0) && (cid != id_company)) visible = false;
-		//if ((currency != "none") && (companyCurrencyByID(cid) != currency)) visible = false;
 		if ((paper != "none") && (historyTable->item(i, 3)->text() != paper)) visible = false;
 		if ((operation != "none") && !operation.contains(historyTable->item(i, 1)->text())) visible = false;
 
@@ -661,34 +672,41 @@ double HistoryWidget::payedSize(int id, const QString &kks) const
 		{
 			case opBuy:
 			{
-			if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
-				payed += rec.record.value(ftPrice).toDouble();
-			break;
+				if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
+					payed += rec.record.value(ftPrice).toDouble();
+				break;
 			}
 			case opSell:
 			{
-			if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
-				payed -= rec.record.value(ftPrice).toDouble();
-			break;
+				if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
+					payed -= rec.record.value(ftPrice).toDouble();
+				break;
 			}
 			default: break;
 		}
     }
     return payed;
 }
-double HistoryWidget::divsSize(int id, const QString &kks) const
+double HistoryWidget::divsSize(int id, const QString &kks, const ConfiguratorAbstractData *div_data) const
 {
     double divs = 0;
-    for (int i=0; i<m_operationsData.count(); i++)
-    {
-		const ConfiguratorAbstractRecord &rec = m_operationsData.recAt(i);
-		int op_type = rec.record.value(ftTypeOperation).toInt();
-		if ((op_type != opCouponReceive) && (op_type != opDivReceive)) continue;
+    if (!div_data) return divs;
 
+  	QDate cur_dt = QDate::currentDate();
+    for (int i=0; i<div_data->count(); i++)
+    {
+		const ConfiguratorAbstractRecord &rec = div_data->recAt(i);
 		if (rec.record.value(ftKKS) == kks && rec.record.value(ftCompany).toInt() == id)
 		{
-			if (op_type == opDivReceive) divs += rec.record.value(ftPrice).toDouble();
-			else divs += rec.record.value(ftCouponSize).toDouble();
+	    	QDate dt_div = QDate::fromString(rec.value(ftDateCoupon), DATE_MASK);
+	    	int delay_days = rec.value(ftDivDelay).toInt();
+	    	if (dt_div.addDays(delay_days) > cur_dt) continue;
+
+			//if (id==103) qDebug()<<kks;
+			double div_size = rec.value(ftDivSize).toDouble();
+			double nalog_factor = rec.value(ftNalogSize).toDouble();
+			int p_count = rec.value(ftCount).toInt();
+			divs += (p_count*div_size*(1-nalog_factor));
 		}
     }
     return divs;
@@ -751,7 +769,7 @@ void HistoryWidget::setPrice(const ConfiguratorAbstractRecord &rec)
 		LStatic::setTableRow(pos, pricesTable, list);
     }
 
-    updateBag(rec);
+    //updateBag(rec);
     slotQuery();
 }
 void HistoryWidget::saveData()
@@ -783,12 +801,12 @@ void HistoryWidget::slotNextOperation(int op_type, const ConfiguratorAbstractRec
     setPrice(m_operationsData.records.last());	
     slotQuery();
 }
-void HistoryWidget::updateBag(const ConfiguratorAbstractRecord &rec)
+void HistoryWidget::updateBag(const ConfiguratorAbstractRecord &rec, const double &div_size)
 {
     QString kks = rec.record.value(ftKKS);
     int id = rec.record.value(ftCompany).toInt();
-    int count = countPaper(id, kks);
-    double p1 = lastPrice(id, kks);
+    int count = countPaper(id, kks); //узнаю количество таких бумаг
+    double p1 = lastPrice(id, kks); //узнаю последнюю известную цену
     if (p1 < 0 || count < 0)
     {
     	qWarning()<<QString("HistoryWidget::updateBag - ERR: (p1(%1) < 0 || count(%2) < 0) for id_company %3").arg(p1).arg(count).arg(id);
@@ -796,10 +814,9 @@ void HistoryWidget::updateBag(const ConfiguratorAbstractRecord &rec)
     }
     double payed = payedSize(id, kks);
     double diff = p1*count - payed;
-    double divs = divsSize(id, kks);
+    int prec = lCommonSettings.paramValue("precision").toInt();
     
     //prepare bag record
-    int prec = lCommonSettings.paramValue("precision").toInt();
     ConfiguratorAbstractRecord bag_rec;
     bag_rec.record.insert(ftCurrency, companyCurrencyByID(id));
     bag_rec.record.insert(ftID, QString::number(id));
@@ -810,7 +827,7 @@ void HistoryWidget::updateBag(const ConfiguratorAbstractRecord &rec)
     bag_rec.record.insert(ftPrice, QString::number(p1*count, 'f', prec));
     bag_rec.record.insert(ftPayedSize, QString::number(payed, 'f', prec));
     bag_rec.record.insert(ftDifference, QString::number(diff, 'f', prec));
-    bag_rec.record.insert(ftCouponSize, QString::number(divs, 'f', prec));
+    bag_rec.record.insert(ftCouponSize, QString::number(div_size, 'f', prec));
 
     emit signalBagUpdate(bag_rec);
 }

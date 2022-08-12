@@ -344,6 +344,7 @@ void DivStatWidget::fillStatTable(ConfiguratorAbstractData *data)
     	row_data.clear();
     	row_data.append(rec.value(ftDateCoupon));
     	row_data.append(calendarTable->item(i, company_col)->text());
+    	if (row_data.last().contains("OFZ")) row_data.last().replace("OFZ", rec.value(ftKKS).mid(2, 5));
     	row_data.append(is_bond ? "bond" : "cfd");
     	row_data.append(QString("%1/%2").arg(QString::number(x, 'f', 1)).arg(QString::number(divs_sum, 'f', 0)));
     	row_data.append(QString("%1/%2").arg(QString::number(x*f_nalog, 'f', 1)).arg(QString::number(nalog_sum, 'f', 0)));
@@ -372,7 +373,6 @@ void DivStatWidget::updateColorsStat()
 		}
 	}
 }
-
 QStringList DivStatWidget::recToRow(const ConfiguratorAbstractRecord &rec, const QList<int> &fields) const
 {
     QStringList list;

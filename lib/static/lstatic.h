@@ -80,7 +80,7 @@ public:
 	//// for QTableWidget funcs
 	static void addTableRow(QTableWidget*, const QStringList&, int align = Qt::AlignCenter, QColor cf = Qt::black, QColor cb = Qt::white);
 	static void insertTableRow(int, QTableWidget*, const QStringList&, int align = Qt::AlignCenter, QColor cf = Qt::black, QColor cb = Qt::white);
-	static void setTableRow(int, QTableWidget*, const QStringList&, int align = Qt::AlignCenter, QColor c = Qt::black);
+	static void setTableRow(int, QTableWidget*, const QStringList&, int align = Qt::AlignCenter, QColor c = Qt::black, QColor cb = Qt::white);
 	static void createTableItem(QTableWidget*, int, int, const QString&, int flags = Qt::ItemIsEnabled, int align = Qt::AlignCenter, QColor c = Qt::black);
 	static void setTableHeaders(QTableWidget*, const QStringList&, int orintation = Qt::Horizontal);
 	static void removeAllRowsTable(QTableWidget*);

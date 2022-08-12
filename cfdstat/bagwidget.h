@@ -57,6 +57,7 @@ protected:
 
 public slots:
     void slotBagUpdate(const ConfiguratorAbstractRecord&);
+    void slotBagRefreshTable();
     
 signals:
     void signalNextOperation(int, const ConfiguratorAbstractRecord&);

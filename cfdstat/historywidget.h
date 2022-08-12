@@ -25,7 +25,7 @@ public:
     void load(QSettings&);
     void setPrice(const ConfiguratorAbstractRecord&);
     void saveData();
-    void initBagData();
+    void initBagData(const ConfiguratorAbstractData*);
     void clearQuery();
 
     inline const ConfiguratorAbstractData& operationsData() const {return m_operationsData;}
@@ -38,7 +38,6 @@ protected:
     ConfiguratorAbstractData  m_pricesData;
     ConfiguratorAbstractData  m_companyData;
     LChartWidget *m_chart;
-    //DivCalc *m_calc;
 
     void readGeneralData();
     void convertCompanyCurrency();
@@ -54,15 +53,15 @@ protected:
     QString companyByID(int) const;
     QString companyCurrencyByID(int) const;
     void getPricesByID(int, const QString&, QMap<QString, double>&);
-   // void updateOperation(int);
     void convertToPricesRecord(const ConfiguratorAbstractRecord&, ConfiguratorAbstractRecord&);
     void sortDataByDate(ConfiguratorAbstractData&);
     int findMinDateOperation(const ConfiguratorAbstractData&, int) const;
-    void updateBag(const ConfiguratorAbstractRecord&);
-    double lastPrice(int, const QString&) const;
+    void updateBag(const ConfiguratorAbstractRecord&, const double&);
+    //void updateBagDivsData(const ConfiguratorAbstractData*);
+    double lastPrice(int, const QString&) const; //последняя известная цена бумаги
     double payedSize(int, const QString&) const;
-    double divsSize(int, const QString&) const;
-    int countPaper(int, const QString&) const;
+    double divsSize(int, const QString&, const ConfiguratorAbstractData*) const;
+    int countPaper(int, const QString&) const; //текущее количество бумаг
     void updateColors();
     void insertDivsToTable(const ConfiguratorAbstractData*);
 
@@ -76,7 +75,7 @@ public slots:
 
 
 protected slots:
-    void slotQuery();
+    void slotQuery(); //выолнит фильтр в таблице по текущим критериям
     void slotEditOperation();
     void slotEditPrices();
     void slotPriceChart();
@@ -85,7 +84,7 @@ protected slots:
 signals:
     void signalBagUpdate(const ConfiguratorAbstractRecord&);
     void signalGetDivsData(ConfiguratorAbstractData*&);
-
+    void signalBagRefreshTable();
 
 private:
     void convertPricesToPoints(const QMap<QString, double>&, QList<QPointF>&);

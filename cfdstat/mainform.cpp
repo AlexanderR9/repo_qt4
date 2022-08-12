@@ -25,7 +25,7 @@ MainForm::MainForm(QWidget *parent)
 	m_divsCalcObj(NULL)
 {
     setObjectName("cfd_main_form");
-    
+
 }
 void MainForm::initCalcObj()
 {
@@ -70,6 +70,7 @@ void MainForm::initWidgets()
 {
     load();
 
+    //создание страниц
     m_stackedWidget = new QStackedWidget(this);
     addWidget(m_stackedWidget, 0, 0, 1, 1);
     m_stackedWidget->addWidget(new ConfiguratorGeneralDataWdiget(this)); //0
@@ -82,13 +83,13 @@ void MainForm::initWidgets()
     connect(operationsHistoryWidget(), SIGNAL(signalBagUpdate(const ConfiguratorAbstractRecord&)), bagWidget(), SLOT(slotBagUpdate(const ConfiguratorAbstractRecord&)));
     connect(divStatWidget(), SIGNAL(signalGetCompanyByID(int, QString&)), operationsHistoryWidget(), SLOT(slotSetCompanyByID(int, QString&)));
     connect(divStatWidget(), SIGNAL(signalGetCurrencyByID(int, QString&)), operationsHistoryWidget(), SLOT(slotSetCurrencyByID(int, QString&)));
-    //connect(divStatWidget(), SIGNAL(signalGetHistoryData(ConfiguratorAbstractData*&)), operationsHistoryWidget(), SLOT(slotSetHistoryData(ConfiguratorAbstractData*&)));
+    connect(operationsHistoryWidget(), SIGNAL(signalBagRefreshTable()), bagWidget(), SLOT(slotBagRefreshTable()));
 
     updateButtons();
-    operationsHistoryWidget()->initBagData(); //long
-    bagWidget()->refresh(); //long
+    //operationsHistoryWidget()->initBagData(); //передача информации о текущем состоянии портфеля в BagWidget
+    //bagWidget()->refresh(); //long
 
-    initCalcObj();
+    initCalcObj(); // в этот момент уже должна быть инициализирована страница HistoryWidget
 }
 void MainForm::updateButtons()
 {
@@ -164,7 +165,7 @@ void MainForm::initCommonSettings()
     lCommonSettings.setDefValue(key, QString("75.3"));
 
     combo_list.clear();
-    combo_list << "2020" << "2021" << "2022" << "2023";
+    combo_list << "2020" << "2021" << "2022" << "2023" << "2024";
     key = QString("first_div_date");
     lCommonSettings.addParam(QString("First divs. date"), LSimpleDialog::sdtIntCombo, key);
     lCommonSettings.setComboList(key, combo_list);
@@ -174,9 +175,6 @@ void MainForm::initCommonSettings()
     lCommonSettings.addParam(QString("Second divs. date"), LSimpleDialog::sdtIntCombo, key);
     lCommonSettings.setComboList(key, combo_list);
     lCommonSettings.setDefValue(key, QString::number(QDate::currentDate().year()));
-
-    //key = QString("calc_divs");
-    //lCommonSettings.addParam(QString("Calc divs before start"), LSimpleDialog::sdtBool, key);
 
     key = QString("table_colors");
     lCommonSettings.addParam(QString("Apply tables colors"), LSimpleDialog::sdtBool, key);

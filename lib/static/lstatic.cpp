@@ -221,7 +221,7 @@ void LStatic::insertTableRow(int index, QTableWidget *table, const QStringList &
     }
 
     table->insertRow(index);
-    setTableRow(index, table, list, align, cf);
+    setTableRow(index, table, list, align, cf, cb);
 }
 QString LStatic::baToStr(const QByteArray &ba, int line_size)
 {
@@ -268,7 +268,7 @@ void LStatic::addTableRow(QTableWidget *table, const QStringList &list, int alig
 	table->setItem(table->rowCount()-1, i, item);
     }
 }
-void LStatic::setTableRow(int row, QTableWidget *table, const QStringList &list, int align, QColor c)
+void LStatic::setTableRow(int row, QTableWidget *table, const QStringList &list, int align, QColor c, QColor cb)
 {
     if (!table) return;
 
@@ -297,6 +297,7 @@ void LStatic::setTableRow(int row, QTableWidget *table, const QStringList &list,
 	item->setText(list.at(i));
 	if (align >= 0) item->setTextAlignment(align);
 	item->setForeground(QBrush(c));
+	item->setBackground(QBrush(cb));
     }
 }
 void LStatic::createTableItem(QTableWidget *table, int row, int col, const QString &text, int flags, int align, QColor c)

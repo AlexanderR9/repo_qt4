@@ -138,7 +138,6 @@ void BagWidget::updateIcons()
 		if (flag_name.length() > 5)
 		{
 			QIcon icon(QString(":/icons/images/flag/%1").arg(flag_name));
-			//QIcon icon(QString(":/icons/images/b_scale.svg"));
 			company_item->setIcon(icon);
 		}
     }
@@ -197,16 +196,17 @@ void BagWidget::sell(const ConfiguratorAbstractRecord &rec)
 }
 void BagWidget::slotBagUpdate(const ConfiguratorAbstractRecord &rec)
 {
+	//qDebug()<<QString("BagWidget::slotBagUpdate - %1").arg(rec.toString());
     QString kks = rec.record.value(ftKKS);
     int id = rec.record.value(ftID).toInt();
     int pos = findRec(id, kks);
-    if (pos < 0)
+    if (pos < 0) //в таблице еще нет строки с такой бумагой
     {
 		m_data.records.append(rec);
 		QStringList list = recToRow(m_data.records.last());
 		LStatic::addTableRow(tableWidget, list);
     }
-    else
+    else //в таблице уже есть строка с такой бумагой
     {
 		m_data.records[pos].copy(rec);
 		QStringList list = recToRow(m_data.recAt(pos));
@@ -268,6 +268,10 @@ void BagWidget::readGeneralData()
         return;
     }
     qDebug()<<QString("BagWidget::readGeneralData() - Data loaded ok!  country count %1,  company count %3").arg(m_countryData.count()).arg(m_companyData.count());
+}
+void BagWidget::slotBagRefreshTable()
+{
+	refresh();
 }
 
 
