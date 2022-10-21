@@ -5,6 +5,7 @@ INCLUDEPATH *= $$PWD \
 ####### pri includes ################
 include($$PWD/math/simplemath.pri)
 include($$PWD/static/static.pri)
+include($$PWD/mq/mq.pri)
 
 
 # Input

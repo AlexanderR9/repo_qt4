@@ -9,6 +9,7 @@ DEPENDPATH += .
 INCLUDEPATH += . \
 	    $$PWD \
 	    $$PWD/math \
+	    $$PWD/mq \
 	    $$PWD/static
 
 

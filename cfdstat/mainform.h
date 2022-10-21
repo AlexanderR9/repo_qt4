@@ -35,7 +35,7 @@ protected:
     void initActions();
     void initWidgets();
     void initCommonSettings();
-    void initCalcObj();
+    void initCalcDivObj();
 
     QString mainTitle() const;
     void updateButtons();

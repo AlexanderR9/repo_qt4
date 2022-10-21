@@ -6,6 +6,7 @@
  #include "datastructs.h"
 
 class LSearch;
+class QSplitter;
 
 struct BagState
 {
@@ -33,27 +34,37 @@ public:
     void sell(const ConfiguratorAbstractRecord&);
     void refresh();
 
+    virtual void save(QSettings&);
+    virtual void load(QSettings&);
+
 protected:
     LSearch *m_search;
     ConfiguratorAbstractData  m_data;
     BagState r_state; // cfd rub
     BagState u_state; // cfd usd
     BagState b_state; // bonds
+    QSplitter *m_splitter;
+    QTableWidget *m_statisticTable;
+
 
     ConfiguratorAbstractData  m_countryData;
     ConfiguratorAbstractData  m_companyData;
 
 
-    void initTable();
+    void initBoxes();
+    void initBagTable();
+    void initStatisticTable();
     QList<int> headerList() const;
     int findRec(int, const QString&) const;
     QStringList recToRow(const ConfiguratorAbstractRecord&) const;
     QString companyIcon(const QString&) const;
+    QString companyCurrency(int) const;
     void updateColors();
     void updateIcons();
     void recalcState(const ConfiguratorAbstractRecord&);
     void recalcState();
     void readGeneralData();
+    void recalcStatistic();
 
 public slots:
     void slotBagUpdate(const ConfiguratorAbstractRecord&);
@@ -61,10 +72,15 @@ public slots:
     
 signals:
     void signalNextOperation(int, const ConfiguratorAbstractRecord&);
+    void signalGetOperationsHistory(ConfiguratorAbstractData*&);
+    void signalGetDivsData(ConfiguratorAbstractData*&);
+
 
 protected slots:
     void slotTimer();
 
+private:
+    void setStatisticRow(int, const double&, const double&);
 
 };
 

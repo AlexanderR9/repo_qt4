@@ -7,6 +7,7 @@
  #include <QDebug>
  #include <QDir>
  #include <QTimer>
+ #include <QSplitter>
 
  #define COMPANY_COL		0
  #define TABLE_ROW_HEIGHT	26
@@ -15,16 +16,19 @@
 /////////// BagWidget /////////////////////////////
 BagWidget::BagWidget(QWidget *parent)
 	:LChildWidget(parent),
-	 m_search(NULL)
+	 m_search(NULL),
+	 m_splitter(NULL),
+	 m_statisticTable(NULL)
 {
     setupUi(this);
-    initTable();
+    setObjectName("bag_page");
+
+    initBoxes();
+    initBagTable();
     readGeneralData();
+    initStatisticTable();
 
     searchLineEdit->clear();
-    listWidget->clear();
-    tableListBox->hide();
-
     m_search = new LSearch(searchLineEdit, this);
     m_search->addTable(tableWidget, countLabel);
     m_search->exec();
@@ -33,9 +37,89 @@ BagWidget::BagWidget(QWidget *parent)
     connect(timer1, SIGNAL(timeout()), this, SLOT(slotTimer()));
     timer1->start(1200);
 }
+void BagWidget::initBoxes()
+{
+    listWidget->clear();
+    listWidget->hide();
+    tableListBox->layout()->removeWidget(listWidget);
+    tableListBox->setTitle("Statistic");
+    tableListBox->setMaximumWidth(500);
+    tableBox->setMinimumWidth(500);
+
+	if (layout()) delete layout();
+	QHBoxLayout *lay = new QHBoxLayout(0);
+	setLayout(lay);
+
+	m_splitter = new QSplitter(Qt::Horizontal, this);
+	lay->addWidget(m_splitter);
+	m_splitter->addWidget(tableBox);
+	m_splitter->addWidget(tableListBox);
+
+}
+void BagWidget::recalcStatistic()
+{
+	//LStatic::removeAllRowsTable(m_statisticTable);
+
+	ConfiguratorAbstractData *history_data = NULL;
+	emit signalGetOperationsHistory(history_data); //запрос истории совершенных операций
+
+	ConfiguratorAbstractData *div_data = NULL;
+	emit signalGetDivsData(div_data); //запрос истории выплат дивов и купонов у DivCalc
+
+	if (!history_data || !div_data)
+	{
+		qWarning()<<QString("BagWidget::recalcStatistic() WARNING: !history_data || !div_data");
+		return;
+	}
+
+	//qDebug()<<QString("BagWidget::recalcStatistic() - history_data size: %1    div_data size: %2").arg(history_data->count()).arg(div_data->count());
+
+	int i_row = 0;
+	int n = history_data->count();
+	double u_sum, r_sum;
+
+	//calc buy sum
+	u_sum = r_sum = 0;
+	for (int i=0; i<n; i++)
+	{
+		const ConfiguratorAbstractRecord &rec = history_data->recAt(i);
+		if (rec.value(ftTypeOperation).toInt() != opBuy) continue;
+
+		QString currency = companyCurrency(rec.value(ftCompany).toInt());
+		if (currency == "usd") u_sum += rec.value(ftPrice).toDouble();
+		else if (currency == "rur") r_sum += rec.value(ftPrice).toDouble();
+		else qWarning()<<QString("BagWidget::recalcStatistic()  WARNING:  invalid currency %1").arg(currency);
+	}
+	setStatisticRow(i_row, u_sum, r_sum); i_row++;
+
+
+	//calc sell sum
+	u_sum = r_sum = 0;
+	for (int i=0; i<n; i++)
+	{
+		const ConfiguratorAbstractRecord &rec = history_data->recAt(i);
+		if (rec.value(ftTypeOperation).toInt() != opSell) continue;
+
+		QString currency = companyCurrency(rec.value(ftCompany).toInt());
+		if (currency == "usd") u_sum += rec.value(ftPrice).toDouble();
+		else if (currency == "rur") r_sum += rec.value(ftPrice).toDouble();
+		else qWarning()<<QString("BagWidget::recalcStatistic()  WARNING:  invalid currency %1").arg(currency);
+	}
+	setStatisticRow(i_row, u_sum, r_sum); i_row++;
+
+}
+void BagWidget::setStatisticRow(int row, const double &usd_value, const double &rur_value)
+{
+	if (row < 0 || row >= m_statisticTable->rowCount()) return;
+
+	QStringList row_data;
+	row_data << QString::number(usd_value, 'f', 1) << QString::number(rur_value, 'f', 1);
+	LStatic::setTableRow(row, m_statisticTable, row_data);
+}
 void BagWidget::slotTimer()
 {
     recalcState();
+    recalcStatistic();
     m_search->exec();
     qobject_cast<QTimer*>(sender())->stop();
 }
@@ -168,7 +252,7 @@ void BagWidget::updateColors()
 		}
     }
 }
-void BagWidget::initTable()
+void BagWidget::initBagTable()
 {
     LStatic::fullClearTable(tableWidget);
 
@@ -183,6 +267,23 @@ void BagWidget::initTable()
     LStatic::setTableHeaders(tableWidget, headers);
     tableWidget->verticalHeader()->hide();
     tableWidget->setIconSize(QSize(TABLE_ICON_SIZE, TABLE_ICON_SIZE));
+}
+void BagWidget::initStatisticTable()
+{
+	m_statisticTable = new QTableWidget(this);
+	m_statisticTable->setSelectionMode(QAbstractItemView::NoSelection);
+	tableListBox->layout()->addWidget(m_statisticTable);
+
+    LStatic::fullClearTable(m_statisticTable);
+    QStringList headers;
+    headers << "usd" << "rur";
+    LStatic::setTableHeaders(m_statisticTable, headers, Qt::Horizontal);
+
+    headers.clear();
+    headers << "Payed of buy operations" << "Getted of sell operations" << "Current bag price" << "Received divs" << "Received coupons";
+    headers << "Commission" << "Tax";
+    LStatic::setTableHeaders(m_statisticTable, headers, Qt::Vertical);
+
 }
 void BagWidget::buy(const ConfiguratorAbstractRecord &rec)
 {
@@ -244,6 +345,22 @@ QString BagWidget::companyIcon(const QString &company_name) const
     }
     return QString();
 }
+QString BagWidget::companyCurrency(int c_id) const
+{
+	QString currency = "??";
+	for (int i=0; i<m_companyData.count(); i++)
+	{
+		if (m_companyData.recAt(i).value(ftID, QString("-1")).toInt() == c_id)
+		{
+			int v = m_companyData.recAt(i).value(ftCurrency, QString("-1")).toInt();
+			if (v == 2) currency = "usd";
+			else if (v == 1) currency = "rur";
+			else currency = QString::number(v);
+			break;
+		}
+	}
+	return currency;
+}
 int BagWidget::findRec(int id, const QString &kks) const
 {
     for (int i=0; i<m_data.count(); i++)
@@ -272,6 +389,19 @@ void BagWidget::readGeneralData()
 void BagWidget::slotBagRefreshTable()
 {
 	refresh();
+}
+void BagWidget::save(QSettings &settings)
+{
+	LChildWidget::save(settings);
+	settings.setValue(QString("%1/splitter_state").arg(objectName()), m_splitter->saveState());
+}
+void BagWidget::load(QSettings &settings)
+{
+	LChildWidget::load(settings);
+
+	QByteArray ba = settings.value(QString("%1/splitter_state").arg(objectName()), QByteArray()).toByteArray();
+	if (!ba.isEmpty()) m_splitter->restoreState(ba);
+
 }
 
 

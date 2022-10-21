@@ -3,3 +3,6 @@ Makefile
 obj
 moc
 uic
+lib_target
+qrc_icons.cpp
+

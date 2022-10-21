@@ -27,7 +27,7 @@ MainForm::MainForm(QWidget *parent)
     setObjectName("cfd_main_form");
 
 }
-void MainForm::initCalcObj()
+void MainForm::initCalcDivObj()
 {
 	m_divsCalcObj = new DivCalc(operationsHistoryWidget()->operationsData(), this);
 
@@ -49,6 +49,7 @@ void MainForm::initCalcObj()
     connect(divStatWidget(), SIGNAL(signalGetDivsData(ConfiguratorAbstractData*&)), m_divsCalcObj, SLOT(slotSetDivsData(ConfiguratorAbstractData*&)));
     connect(divStatWidget(), SIGNAL(signalGetWaitDays(QList<quint8>&)), m_divsCalcObj, SLOT(slotGetWaitDays(QList<quint8>&)));
     connect(operationsHistoryWidget(), SIGNAL(signalGetDivsData(ConfiguratorAbstractData*&)), m_divsCalcObj, SLOT(slotSetDivsData(ConfiguratorAbstractData*&)));
+    connect(bagWidget(), SIGNAL(signalGetDivsData(ConfiguratorAbstractData*&)), m_divsCalcObj, SLOT(slotSetDivsData(ConfiguratorAbstractData*&)));
 
 
 }
@@ -84,12 +85,10 @@ void MainForm::initWidgets()
     connect(divStatWidget(), SIGNAL(signalGetCompanyByID(int, QString&)), operationsHistoryWidget(), SLOT(slotSetCompanyByID(int, QString&)));
     connect(divStatWidget(), SIGNAL(signalGetCurrencyByID(int, QString&)), operationsHistoryWidget(), SLOT(slotSetCurrencyByID(int, QString&)));
     connect(operationsHistoryWidget(), SIGNAL(signalBagRefreshTable()), bagWidget(), SLOT(slotBagRefreshTable()));
+    connect(bagWidget(), SIGNAL(signalGetOperationsHistory(ConfiguratorAbstractData*&)), operationsHistoryWidget(), SLOT(slotSetHistoryData(ConfiguratorAbstractData*&)));
 
+    initCalcDivObj(); // в этот момент уже должна быть инициализирована страница HistoryWidget
     updateButtons();
-    //operationsHistoryWidget()->initBagData(); //передача информации о текущем состоянии портфеля в BagWidget
-    //bagWidget()->refresh(); //long
-
-    initCalcObj(); // в этот момент уже должна быть инициализирована страница HistoryWidget
 }
 void MainForm::updateButtons()
 {
