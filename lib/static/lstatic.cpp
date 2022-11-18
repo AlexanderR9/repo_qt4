@@ -100,6 +100,8 @@ void LSearch::slotSearch(const QString &s)
 		setText(i);
 	}
 
+	emit signalSearched();
+
 //	qDebug("LSearch end");
 }
 void LSearch::exec()

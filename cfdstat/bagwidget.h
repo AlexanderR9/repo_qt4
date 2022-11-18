@@ -7,6 +7,7 @@
 
 class LSearch;
 class QSplitter;
+class QCheckBox;
 
 struct BagState
 {
@@ -45,7 +46,7 @@ protected:
     BagState b_state; // bonds
     QSplitter *m_splitter;
     QTableWidget *m_statisticTable;
-
+    QCheckBox *m_hideSellingCheckBox;
 
     ConfiguratorAbstractData  m_countryData;
     ConfiguratorAbstractData  m_companyData;
@@ -78,6 +79,8 @@ signals:
 
 protected slots:
     void slotTimer();
+    void slotHideSoldChanged();
+    void slotWasSearch();
 
 private:
     void setStatisticRow(int, const double&, const double&);

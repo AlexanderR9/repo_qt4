@@ -102,10 +102,10 @@ void OperationDialogBase::getCompanyInfo(int c_id, CompanyInfo &data)
     for (int j=0; j<g_data.count(); j++)
     {
         if (g_data.recAtValue(j, ftID).toInt() == c_id)
-	{
-	    data.rec.copy(g_data.records.at(j));
-	    break;
-	}
+		{
+			data.rec.copy(g_data.records.at(j));
+			break;
+		}
     }
 
     GeneralDataFileReader::loadDataFormFile(gdCFD, g_data);
@@ -155,15 +155,12 @@ void OperationDialogBase::placeSubWidgets()
 				default: break;
 	        }
 		}
-
-
     } //end for
 }
 void OperationDialogBase::placeFixFieldSubWidget(int ft)
 {
     QVariantList list;
     QVariantList user_data;
-
 	QString interface_name = ConfiguratorEnums::interfaceTextByType(ft);
 	QString key = ConfiguratorEnums::xmlAttrNameByType(ft);
 	addSimpleWidget(interface_name, sdtStringCombo, key);
@@ -247,21 +244,16 @@ void OperationDialogBase::slotCompanyChanged()
 
     cur_company.reset();
     getCompanyInfo(currentCompany(), cur_company);
-//    qDebug()<<cur_company.toStr();
-
     prepareKKSList();
     slotPaperTypeChanged();
 }
 void OperationDialogBase::slotPaperTypeChanged()
 {
-//    qDebug("OperationDialogBase::slotPaperTypeChanged()");
     updateEnabled();
     slotGetCurrentPrice();
 }
 void OperationDialogBase::slotGetCurrentPrice()
 {
-//    qDebug("OperationDialogBase::slotGetCurrentPrice()");
-
     double cp = -1;
     QString key = ConfiguratorEnums::xmlAttrNameByType(ftPrice1);
     const SimpleWidget *sw = widgetByKey(key);
@@ -273,10 +265,10 @@ void OperationDialogBase::slotGetCurrentPrice()
     QString kks;
     if (!isCompanyType())
     {
-	key = ConfiguratorEnums::xmlAttrNameByType(ftKKS);
-	sw = widgetByKey(key);
-	if (!sw) {qWarning()<<QString("OperationDialogBase::slotGetCurrentPrice(): ERR - sw is null, key=%1").arg(key); return;}
-	kks = sw->comboBox->currentText();
+		key = ConfiguratorEnums::xmlAttrNameByType(ftKKS);
+		sw = widgetByKey(key);
+		if (!sw) {qWarning()<<QString("OperationDialogBase::slotGetCurrentPrice(): ERR - sw is null, key=%1").arg(key); return;}
+		kks = sw->comboBox->currentText();
     }
 
     ConfiguratorAbstractRecord rec;
@@ -295,14 +287,14 @@ void OperationDialogBase::fillResultRecord()
     {
         int ft = fields.at(i);
         QString key = ConfiguratorEnums::xmlAttrNameByType(ft);
-	m_record.record.insert(ft, widgetValue(key).toString().trimmed());	
-	if (ft == ftCompany) 
-	{
-	    const SimpleWidget *sw = widgetByKey(key);
-	    int index = sw->comboBox->currentIndex();
-	    int user_data = sw->comboBox->itemData(index).toInt();
-	    m_record.record.insert(ft, QString::number(user_data));	
-	}
+		m_record.record.insert(ft, widgetValue(key).toString().trimmed());
+		if (ft == ftCompany)
+		{
+			const SimpleWidget *sw = widgetByKey(key);
+			int index = sw->comboBox->currentIndex();
+			int user_data = sw->comboBox->itemData(index).toInt();
+			m_record.record.insert(ft, QString::number(user_data));
+		}
     }    
 }
 bool OperationDialogBase::isCompanyType() const
@@ -329,16 +321,11 @@ void OperationDialogBase::initPaperTypeList()
     setComboList(key, vlist);	
 
     const SimpleWidget *sw = widgetByKey(key);
-    if (sw)
-    {
-//	qDebug("sw ok of ftPaperType");
-	connect(sw->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(slotPaperTypeChanged()));
-    }
+    if (sw) connect(sw->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(slotPaperTypeChanged()));
 
-    key = ConfiguratorEnums::xmlAttrNameByType(ftKKS);
-    if (sw)
-	connect(sw->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(slotGetCurrentPrice()));
-
+    //key = ConfiguratorEnums::xmlAttrNameByType(ftKKS);
+    //sw = widgetByKey(key);
+    //if (sw) connect(sw->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(slotGetCurrentPrice()));
 }
 void OperationDialogBase::initCompanyList()
 {
@@ -350,7 +337,6 @@ void OperationDialogBase::initCompanyList()
 }
 void OperationDialogBase::prepareKKSList()
 {
-//    qDebug("OperationDialog::preparePaperType()");
     QString key = ConfiguratorEnums::xmlAttrNameByType(ftPaperType);
     const SimpleWidget *sw = widgetByKey(key);
     if (!sw) {qWarning()<<QString("OperationDialogBase::preparePaperType(): ERR -  widgetByKey(%1) is NULL").arg(key); return;}
@@ -445,10 +431,7 @@ EditPricesDialog::EditPricesDialog(ConfiguratorAbstractRecord &rec, QWidget *par
 }
 void EditPricesDialog::init()
 {
-//    qDebug("EditPricesDialog::init()");
     OperationDialogBase::init();
-    
-//    qDebug() << m_record.toString();
     recToPage();
 }
 void EditPricesDialog::recToPage()
@@ -528,31 +511,25 @@ void OperationDialog::connectSignalsForCalc()
 {
     QString key = ConfiguratorEnums::xmlAttrNameByType(ftPrice1);
     const SimpleWidget *sw = widgetByKey(key);
-    if (sw)
-	connect(sw->edit, SIGNAL(textChanged(const QString&)), this, SLOT(slotCalcSum()));
+    if (sw) connect(sw->edit, SIGNAL(textChanged(const QString&)), this, SLOT(slotCalcSum()));
 
     key = ConfiguratorEnums::xmlAttrNameByType(ftCouponSize);
     sw = widgetByKey(key);
-    if (sw)
-	connect(sw->edit, SIGNAL(textChanged(const QString&)), this, SLOT(slotCalcSum()));
+    if (sw)	connect(sw->edit, SIGNAL(textChanged(const QString&)), this, SLOT(slotCalcSum()));
 
     key = ConfiguratorEnums::xmlAttrNameByType(ftCommission);
     sw = widgetByKey(key);
-    if (sw)
-	connect(sw->edit, SIGNAL(textChanged(const QString&)), this, SLOT(slotCalcSum()));
+    if (sw)	connect(sw->edit, SIGNAL(textChanged(const QString&)), this, SLOT(slotCalcSum()));
 
     key = ConfiguratorEnums::xmlAttrNameByType(ftCount);
     sw = widgetByKey(key);
-    if (sw)
-	connect(sw->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(slotCalcSum()));
-
+    if (sw)	connect(sw->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(slotCalcSum()));
 
     if (m_type == opSell)
     {
 		key = ConfiguratorEnums::xmlAttrNameByType(ftNalogSize);
 		sw = widgetByKey(key);
-		if (sw)
-			connect(sw->comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(slotCalcSum()));
+		if (sw) connect(sw->edit, SIGNAL(textChanged(const QString&)), this, SLOT(slotCalcSum()));
     }
 }
 void OperationDialog::init()
@@ -576,7 +553,6 @@ void OperationDialog::slotCalcSum()
 
     if (!sender()) return;
     QString sender_name = sender()->objectName().toLower().trimmed();
-//    qDebug()<<QString("OperationDialog::slotCalcSum():  sender - %1").arg(sender_name);
     
     bool ok;
     key = ConfiguratorEnums::xmlAttrNameByType(ftPrice1);
@@ -588,36 +564,34 @@ void OperationDialog::slotCalcSum()
     if (!ok || count < 1) return;
 
     double price_all = p1*count;
-//    int precision = lCommonSettings.paramValue("precision").toInt();    
     double cs_commission = lCommonSettings.paramValue("commission").toDouble();    
 
     double commission = 0;
     key = ConfiguratorEnums::xmlAttrNameByType(ftCommission);
     if (sender_name.contains(key))
     {
-	double commission = widgetValue(key).toDouble(&ok);	
-	if (!ok || commission <= 0) return;
+		double commission = widgetValue(key).toDouble(&ok);
+		if (!ok || commission <= 0) return;
     }
     else
     {
-	commission = price_all*cs_commission/100;
-	setWidgetValue(key, commission);
+		commission = price_all*cs_commission/100;
+		setWidgetValue(key, commission);
     }
     
     double coupons = 0;
     if (!isCompanyType())
     {
         key = ConfiguratorEnums::xmlAttrNameByType(ftCouponSize);
-	coupons = widgetValue(key).toDouble(&ok);	
-	if (!ok || coupons < 0) return;
+        coupons = widgetValue(key).toDouble(&ok);
+        if (!ok || coupons < 0) return;
     }
-
     if (m_type == opSell)
     {
         key = ConfiguratorEnums::xmlAttrNameByType(ftNalogSize);
-	double nalog = widgetValue(key).toDouble(&ok);	
-	if (!ok || nalog < 0) {qWarning("OperationDialog::slotCalcSum() ERR: invalid nalog value"); return;}
-	price_all -= (commission + nalog);
+        double nalog = widgetValue(key).toDouble(&ok);
+        if (!ok || nalog < 0) {qWarning("OperationDialog::slotCalcSum() ERR: invalid nalog value"); return;}
+        price_all -= (commission + nalog);
     }
     else price_all += (commission + coupons*count);
 
@@ -650,11 +624,7 @@ void OperationDialog::initPageByData()
     initPaperTypeList();
 
     QVariantList vlist;
-    for (int i=1; i<=30; i++) vlist.append(i);
-    vlist.append(int(35));
-    vlist.append(int(40));
-    vlist.append(int(45));
-    vlist.append(int(50));
+    for (int i=1; i<=50; i++) vlist.append(i);
     vlist.append(int(60));
     vlist.append(int(70));
     vlist.append(int(100));
@@ -686,10 +656,10 @@ void OperationDialog::checkPageValues(QString &err)
         QString key = ConfiguratorEnums::xmlAttrNameByType(ft);
         if (ConfiguratorEnums::isDoubleField(ft))
         {
-	    QString value = widgetByKey(key)->edit->text().trimmed();
-	    double d = value.toDouble(&ok);
-	    if (!ok || d < 0) {err = tr("Invalid page value [%1]").arg(key); return;}
-	}
+			QString value = widgetByKey(key)->edit->text().trimmed();
+			double d = value.toDouble(&ok);
+			if (!ok || d < 0) {err = tr("Invalid page value [%1]").arg(key); return;}
+        }
     }
 
     QString key = ConfiguratorEnums::xmlAttrNameByType(ftDateOperation);
@@ -706,13 +676,10 @@ void OperationDialog::checkPageValues(QString &err)
 OperationEditDialog::OperationEditDialog(ConfiguratorAbstractRecord &rec, QWidget *parent)
     :OperationDialog(rec.record.value(ftTypeOperation).toInt(), rec, parent)
 {
-    
     setWindowTitle(QString("%1 (editing record)").arg(windowTitle()));
-
 }
 void OperationEditDialog::init()
 {
-//    qDebug("OperationEditDialog::init()");
     OperationDialogBase::init();
     recToPage();
     connectSignalsForCalc();
@@ -786,7 +753,6 @@ void OperationEditDialog::recToPage()
 		key = ConfiguratorEnums::xmlAttrNameByType(field);
 	    setWidgetValue(key, m_record.record.value(field));
     }
-
 }
 
 

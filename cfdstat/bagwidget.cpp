@@ -1,24 +1,30 @@
  #include "bagwidget.h"
  #include "lstatic.h"
  #include "cfdenums.h"
- #include "generaldatawidget.h"
- #include "lcommonsettings.h"
+#include "generaldatawidget.h"
+#include "lcommonsettings.h"
 
- #include <QDebug>
- #include <QDir>
- #include <QTimer>
- #include <QSplitter>
+#include <QDebug>
+#include <QDir>
+#include <QTimer>
+#include <QSplitter>
+#include <QCheckBox>
+#include <QTableWidget>
 
- #define COMPANY_COL		0
- #define TABLE_ROW_HEIGHT	26
- #define TABLE_ICON_SIZE	24
+
+#define COMPANY_COL				0
+#define TABLE_ROW_HEIGHT		26
+#define TABLE_ICON_SIZE			24
+#define SOLD_ROW_COLOR			QColor(230, 225, 225)
+
 
 /////////// BagWidget /////////////////////////////
 BagWidget::BagWidget(QWidget *parent)
 	:LChildWidget(parent),
 	 m_search(NULL),
 	 m_splitter(NULL),
-	 m_statisticTable(NULL)
+	 m_statisticTable(NULL),
+	 m_hideSellingCheckBox(NULL)
 {
     setupUi(this);
     setObjectName("bag_page");
@@ -32,6 +38,7 @@ BagWidget::BagWidget(QWidget *parent)
     m_search = new LSearch(searchLineEdit, this);
     m_search->addTable(tableWidget, countLabel);
     m_search->exec();
+    connect(m_search, SIGNAL(signalSearched()), this, SLOT(slotWasSearch()));
 
     QTimer *timer1 = new QTimer(this);
     connect(timer1, SIGNAL(timeout()), this, SLOT(slotTimer()));
@@ -46,6 +53,10 @@ void BagWidget::initBoxes()
     tableListBox->setMaximumWidth(500);
     tableBox->setMinimumWidth(500);
 
+    m_hideSellingCheckBox = new QCheckBox("Hide sold papers");
+    tableBox->layout()->addWidget(m_hideSellingCheckBox);
+    connect(m_hideSellingCheckBox, SIGNAL(stateChanged(int)), this, SLOT(slotHideSoldChanged()));
+
 	if (layout()) delete layout();
 	QHBoxLayout *lay = new QHBoxLayout(0);
 	setLayout(lay);
@@ -58,8 +69,6 @@ void BagWidget::initBoxes()
 }
 void BagWidget::recalcStatistic()
 {
-	//LStatic::removeAllRowsTable(m_statisticTable);
-
 	ConfiguratorAbstractData *history_data = NULL;
 	emit signalGetOperationsHistory(history_data); //запрос истории совершенных операций
 
@@ -71,8 +80,6 @@ void BagWidget::recalcStatistic()
 		qWarning()<<QString("BagWidget::recalcStatistic() WARNING: !history_data || !div_data");
 		return;
 	}
-
-	//qDebug()<<QString("BagWidget::recalcStatistic() - history_data size: %1    div_data size: %2").arg(history_data->count()).arg(div_data->count());
 
 	int i_row = 0;
 	int n = history_data->count();
@@ -248,7 +255,7 @@ void BagWidget::updateColors()
 		}
 		else if (n == 0)
 		{
-			 LStatic::setTableRowColor(tableWidget, i, QColor(200, 200, 200));
+			 LStatic::setTableRowColor(tableWidget, i, SOLD_ROW_COLOR);
 		}
     }
 }
@@ -403,6 +410,40 @@ void BagWidget::load(QSettings &settings)
 	if (!ba.isEmpty()) m_splitter->restoreState(ba);
 
 }
+void BagWidget::slotHideSoldChanged()
+{
+	bool is_hide = m_hideSellingCheckBox->isChecked();
+	//m_search->exec();
+	int n_hiden = 0;
+	int n_rows = tableWidget->rowCount();
+    for (int i=0; i<n_rows; i++)
+	{
+	  	if (tableWidget->item(i, 1)->background().color() == SOLD_ROW_COLOR)
+	   	{
+	   		if (is_hide) tableWidget->hideRow(i);
+	   		else tableWidget->showRow(i);
+	   	}
 
+	  	if (tableWidget->isRowHidden(i)) n_hiden++;
+	}
+
+    if (!is_hide) m_search->exec();
+    else countLabel->setText(QString("Record number: %1/%2").arg(n_rows-n_hiden).arg(n_rows));
+}
+void BagWidget::slotWasSearch()
+{
+	bool is_hide = m_hideSellingCheckBox->isChecked();
+	if (!is_hide) return;
+
+	int n_hiden = 0;
+	int n_rows = tableWidget->rowCount();
+    for (int i=0; i<n_rows; i++)
+    {
+	  	if (tableWidget->item(i, 1)->background().color() == SOLD_ROW_COLOR) tableWidget->hideRow(i);
+	  	if (tableWidget->isRowHidden(i)) n_hiden++;
+    }
+
+	 countLabel->setText(QString("Record number: %1/%2").arg(n_rows-n_hiden).arg(n_rows));
+}
 
 

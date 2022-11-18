@@ -22,11 +22,7 @@ GeneralDataRecordDialog::GeneralDataRecordDialog(int type, ConfiguratorAbstractR
 	 m_type(type),
 	 m_record(rec)
 {
-
-	//if (!configuratorSettings.widgetsState.generalRecord.isEmpty()) restoreGeometry(configuratorSettings.widgetsState.generalRecord);
-	//else 
 	resize(500, 400);
-
 	setBoxTitle(QObject::tr("Feilds values"));
 
 	switch(m_type)
@@ -40,7 +36,7 @@ GeneralDataRecordDialog::GeneralDataRecordDialog(int type, ConfiguratorAbstractR
 
 	init();
 	setCaptionsWidth(150);
-        addVerticalSpacer();
+    addVerticalSpacer();
 	setExpandWidgets();
 	toPage();
 
@@ -56,88 +52,57 @@ void GeneralDataRecordDialog::init()
 
 	    if (ConfiguratorEnums::isDoubleField(ft))
 	    {
-		//if (ft == ftNalog) name = tr("Nalog, %");
-		addSimpleWidget(name, sdtDoubleLine, key, 2); 
-		//qDebug()<<QString("ConfiguratorEnums::isDoubleField(ft), key=%1)").arg(key);
-		continue;
+			addSimpleWidget(name, sdtDoubleLine, key, 2);
+			continue;
 	    }
 
 	    if (ConfiguratorEnums::isFixField(fields.at(i)))
 	    {
-		addSimpleWidget(name, sdtStringCombo, key);
-		QVariantList list;
-		QVariantList user_data;
-		ConfiguratorAbstractData g_data;
-		GeneralDataFileReader::loadDataFormFile(ConfiguratorEnums::generalTypeByFieldType(ft), g_data);
-		if (g_data.invalid()) break;
-		for (int j=0; j<g_data.count(); j++)
-		{
-		    if (ft == ftCouponCount) list.append(g_data.recAtValue(j, ftCount));
-		    else list.append(g_data.recAtValue(j, ftName));
-		    user_data.append(g_data.recAtValue(j, ftID));
-		}
-		setComboList(key, list, user_data);	
-		continue;
+			addSimpleWidget(name, sdtStringCombo, key);
+			QVariantList list;
+			QVariantList user_data;
+			ConfiguratorAbstractData g_data;
+			GeneralDataFileReader::loadDataFormFile(ConfiguratorEnums::generalTypeByFieldType(ft), g_data);
+			if (g_data.invalid()) break;
+			for (int j=0; j<g_data.count(); j++)
+			{
+				if (ft == ftCouponCount) list.append(g_data.recAtValue(j, ftCount));
+				else list.append(g_data.recAtValue(j, ftName));
+				user_data.append(g_data.recAtValue(j, ftID));
+			}
+			setComboList(key, list, user_data);
+			continue;
 	    }
 
 
 	    switch(ft)
 	    {
-		case ftCount: 
-		case ftID: 
-		{
-		    //qDebug("addSimpleWidget(name, sdtIntLine, key=ftID); ");
-		    addSimpleWidget(name, sdtIntLine, key); 
-		    break;
-		}
+			case ftCount:
+			case ftID:
+			{
+				addSimpleWidget(name, sdtIntLine, key);
+				break;
+			}
 
-		case ftNote: 
-		case ftImage: 
-		case ftKKS: 
-		case ftDateOffer: 
-		case ftDateCoupon: 
-		case ftDateOperation: 
-		case ftName: 
-		case ftShortName: {addSimpleWidget(name, sdtString, key); break;}
+			case ftNote:
+			case ftImage:
+			case ftKKS:
+			case ftDateOffer:
+			case ftDateCoupon:
+			case ftDateOperation:
+			case ftName:
+			case ftShortName: {addSimpleWidget(name, sdtString, key); break;}
 
-		case ftDivDelay:
-		{
-		    addSimpleWidget(name, sdtIntCombo, key);
-		    QVariantList list;
-		    list << 1 << 3 << 5 << 7 << 14 << 21 << 30 << 45 << 60;
-		    setComboList(key, list);	
-		    setWidgetValue(key, 7);
-		    break;
-		}
-
-/*
-		case ftCurrency:
-		{
-		    addSimpleWidget(name, sdtStringCombo, key);
-		    QVariantList list;
-		    list << "rub" << "usd";
-		    setComboList(key, list);	
-		    break;
-		}
-
-		case ftRating:
-		{
-		    addSimpleWidget(name, sdtIntCombo, key);
-		    QVariantList list;
-		    list << 1 << 2 << 3;
-		    setComboList(key, list);	
-		    break;
-		}
-		case ftCouponCount:
-		{
-		    addSimpleWidget(name, sdtIntCombo, key);
-		    QVariantList list;
-		    list << 1 << 2 << 3 << 4 << 6 << 12;
-		    setComboList(key, list);	
-		    break;
-		}
-*/
-		default: break;
+			case ftDivDelay:
+			{
+				addSimpleWidget(name, sdtIntCombo, key);
+				QVariantList list;
+				list << 1 << 3 << 5 << 7 << 14 << 21 << 30 << 45 << 60;
+				setComboList(key, list);
+				setWidgetValue(key, 7);
+				break;
+			}
+			default: break;
 	    }
 
 	}
@@ -195,11 +160,9 @@ void GeneralDataRecordDialog::fromPage(QString &err)
 
 	    if (ConfiguratorEnums::isFixField(ft))
 	    {
-		const SimpleWidget *sw = widgetByKey(key);
-		if (sw)
-		{
-		    m_record.record.insert(ft, QString::number(sw->comboBox->itemData(sw->comboBox->currentIndex()).toInt()));
-		}
+			const SimpleWidget *sw = widgetByKey(key);
+			if (sw)
+				m_record.record.insert(ft, QString::number(sw->comboBox->itemData(sw->comboBox->currentIndex()).toInt()));
 	    }
 	}
 }

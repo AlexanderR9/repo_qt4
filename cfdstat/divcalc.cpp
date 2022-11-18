@@ -66,9 +66,6 @@ void DivCalc::updateDivsHistory()
 
     	//insert to container by sort div_date
     	insertRecByDate(m_divs, div_rec);
-
-        //qDebug()<<div_rec.toString();
-
     }
 }
 void DivCalc::updateCouponsHistory()
@@ -106,18 +103,9 @@ void DivCalc::updateCouponsHistory()
 void DivCalc::updateDivInfo()
 {
     m_divs.reset();
-
     updateDivsHistory();
     updateCouponsHistory();
-
     qDebug()<<QString("DivCalc::updateDivInfo()  data divs size %1").arg(m_divs.count());
-    /*
-    if (m_divs.count() > 10)
-    {
-    	for (int i=0; i<30; i++)
-    		qDebug()<<m_divs.recAt(i).toString();
-    }
-    */
 }
 
 int DivCalc::paperCountByDate(const QDate &dt, int cid, QString kks) const
@@ -131,6 +119,8 @@ int DivCalc::paperCountByDate(const QDate &dt, int cid, QString kks) const
 
         QDate dt_operation = QDate::fromString(rec.record.value(ftDateOperation), DATE_MASK);
         if (dt_operation > dt) break;
+        if (!kks.isEmpty() && dt_operation == dt) break;
+
         int p_count = rec.record.value(ftCount).toInt();
         int operation_type = rec.record.value(ftTypeOperation).toInt();
         switch (operation_type)
@@ -144,17 +134,17 @@ int DivCalc::paperCountByDate(const QDate &dt, int cid, QString kks) const
 }
 void DivCalc::insertRecByDate(ConfiguratorAbstractData &data, ConfiguratorAbstractRecord &rec)
 {
-    if (!data.isEmpty())
-    {
+	if (!data.isEmpty())
+	{
 		QDate dt_rec = QDate::fromString(rec.record.value(ftDateCoupon), DATE_MASK);
 		for (int i=0; i<data.count(); i++)
 		{
-			if (QDate::fromString(data.recAtValue(i, ftDateCoupon), DATE_MASK) < dt_rec) continue;
-			data.records.insert(i, rec);
-			return;
+            if (QDate::fromString(data.recAtValue(i, ftDateCoupon), DATE_MASK) < dt_rec) continue;
+            data.records.insert(i, rec);
+            return;
 		}
-    }
-    data.records.append(rec);
+	}
+	data.records.append(rec);
 }
 QList<QDate> DivCalc::emulCouponsDates(const ConfiguratorAbstractRecord &bond_rec) const
 {
@@ -190,16 +180,6 @@ QList<QDate> DivCalc::emulCouponsDates(const ConfiguratorAbstractRecord &bond_re
     	}
     	coupon_dt = coupon_dt.addYears(1);
     }
-
-    /*
-    if (bond_rec.value(ftKKS).contains("100ZL"))
-    {
-    	qDebug()<<QString("year1=%1  year2=%2  n_pay=%3  add_days=%4").arg(year1).arg(year2).arg(n_pay).arg(add_days);
-    	for (int i=0; i<list.count(); i++)
-    		qDebug()<<QString("coupon date: %1").arg(list.at(i).toString(DATE_MASK));
-    }
-    */
-
 	return list;
 }
 void DivCalc::slotGetWaitDays(QList<quint8> &list)

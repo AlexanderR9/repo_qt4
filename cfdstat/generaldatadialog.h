@@ -31,8 +31,6 @@ protected:
 
 protected slots:
     virtual void slotApply();
-    //void slotBufferPathChanged(const QString&);
-
 
 };
 

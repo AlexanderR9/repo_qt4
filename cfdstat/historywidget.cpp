@@ -111,9 +111,6 @@ QStringList HistoryWidget::divRecToTableRow(const ConfiguratorAbstractRecord &re
 	list.append("0");
 	list.append(QString::number(div_size*p_count, 'f', lCommonSettings.paramValue("precision").toInt()));
 	list.append(QString::number(div_size*p_count*nalog_factor, 'f', lCommonSettings.paramValue("precision").toInt()));
-
-
-
 	return list;
 }
 void HistoryWidget::readGeneralData()
@@ -504,6 +501,8 @@ void HistoryWidget::fillTable(QTableWidget *table)
 		else
 		{
 			table->item(i, 0)->setData(Qt::UserRole, i);
+		    if (data.recAtValue(i, ftTypeOperation).toInt() == opSell)
+		    	LStatic::setTableRowColor(table, table->rowCount()-1, QColor(250, 230, 240));
 		}
     }
 }
