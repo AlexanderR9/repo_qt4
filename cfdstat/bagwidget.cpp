@@ -16,7 +16,10 @@
 #define TABLE_ROW_HEIGHT		26
 #define TABLE_ICON_SIZE			24
 #define SOLD_ROW_COLOR			QColor(230, 225, 225)
+#define DIVS_ROW_COLOR			QColor(200, 250, 200)
+#define ERR_VALUE				-9999
 
+#define CALC_STAT_TABLE_TIMEOUT		1855
 
 /////////// BagWidget /////////////////////////////
 BagWidget::BagWidget(QWidget *parent)
@@ -42,7 +45,7 @@ BagWidget::BagWidget(QWidget *parent)
 
     QTimer *timer1 = new QTimer(this);
     connect(timer1, SIGNAL(timeout()), this, SLOT(slotTimer()));
-    timer1->start(1200);
+    timer1->start(CALC_STAT_TABLE_TIMEOUT);
 }
 void BagWidget::initBoxes()
 {
@@ -67,7 +70,7 @@ void BagWidget::initBoxes()
 	m_splitter->addWidget(tableListBox);
 
 }
-void BagWidget::recalcStatistic()
+void BagWidget::recalcStatisticTableData()
 {
 	ConfiguratorAbstractData *history_data = NULL;
 	emit signalGetOperationsHistory(history_data); //запрос истории совершенных операций
@@ -81,52 +84,214 @@ void BagWidget::recalcStatistic()
 		return;
 	}
 
-	int i_row = 0;
-	int n = history_data->count();
-	double u_sum, r_sum;
+	statistic_calcBuySum(history_data);
+	statistic_calcSellSum(history_data);
+	statistic_calcPaperCount(history_data);
+	statistic_calcCommissionSum(history_data);
+	statistic_calcBagPrice();
 
-	//calc buy sum
-	u_sum = r_sum = 0;
+	statistic_calcReceivedDivs(div_data);
+	statistic_calcTaxSum(div_data);
+}
+void BagWidget::statistic_calcBuySum(const ConfiguratorAbstractData *data)
+{
+	if (!data) return;
+
+	int n = data->count();
+	double u_sum = 0;
+	double r_sum = 0;
 	for (int i=0; i<n; i++)
 	{
-		const ConfiguratorAbstractRecord &rec = history_data->recAt(i);
+		const ConfiguratorAbstractRecord &rec = data->recAt(i);
 		if (rec.value(ftTypeOperation).toInt() != opBuy) continue;
 
 		QString currency = companyCurrency(rec.value(ftCompany).toInt());
 		if (currency == "usd") u_sum += rec.value(ftPrice).toDouble();
 		else if (currency == "rur") r_sum += rec.value(ftPrice).toDouble();
-		else qWarning()<<QString("BagWidget::recalcStatistic()  WARNING:  invalid currency %1").arg(currency);
+		else qWarning()<<QString("BagWidget::statistic_calcBuySum()  WARNING:  invalid currency %1").arg(currency);
 	}
-	setStatisticRow(i_row, u_sum, r_sum); i_row++;
+	setStatisticRow(0, u_sum, r_sum);
+}
+void BagWidget::statistic_calcSellSum(const ConfiguratorAbstractData *data)
+{
+	if (!data) return;
 
-
-	//calc sell sum
-	u_sum = r_sum = 0;
+	int n = data->count();
+	double u_sum = 0;
+	double r_sum = 0;
 	for (int i=0; i<n; i++)
 	{
-		const ConfiguratorAbstractRecord &rec = history_data->recAt(i);
+		const ConfiguratorAbstractRecord &rec = data->recAt(i);
 		if (rec.value(ftTypeOperation).toInt() != opSell) continue;
 
 		QString currency = companyCurrency(rec.value(ftCompany).toInt());
 		if (currency == "usd") u_sum += rec.value(ftPrice).toDouble();
 		else if (currency == "rur") r_sum += rec.value(ftPrice).toDouble();
-		else qWarning()<<QString("BagWidget::recalcStatistic()  WARNING:  invalid currency %1").arg(currency);
+		else qWarning()<<QString("BagWidget::statistic_calcSellSum()  WARNING:  invalid currency %1").arg(currency);
 	}
-	setStatisticRow(i_row, u_sum, r_sum); i_row++;
+	setStatisticRow(1, u_sum, r_sum);
+}
+void BagWidget::statistic_calcCommissionSum(const ConfiguratorAbstractData *data)
+{
+	if (!data) return;
+
+	int n = data->count();
+	double u_sum = 0;
+	double r_sum = 0;
+	for (int i=0; i<n; i++)
+	{
+		const ConfiguratorAbstractRecord &rec = data->recAt(i);
+		int type = rec.value(ftTypeOperation).toInt();
+		if (type == opSell || type == opBuy)
+		{
+			QString currency = companyCurrency(rec.value(ftCompany).toInt());
+			double commis = rec.value(ftCommission).toDouble();
+			if (currency == "usd") u_sum += commis;
+			else if (currency == "rur") r_sum += commis;
+			else qWarning()<<QString("BagWidget::statistic_calcCommissionSum()  WARNING:  invalid currency %1").arg(currency);
+		}
+	}
+	setStatisticRow(5, (-1)*u_sum, (-1)*r_sum);
+}
+void BagWidget::statistic_calcTaxSum(const ConfiguratorAbstractData *div_data)
+{
+	if (!div_data) return;
+
+	int n = div_data->count();
+	double u_sum = 0;
+	double r_sum = 0;
+	for (int i=0; i<n; i++)
+	{
+		const ConfiguratorAbstractRecord &rec = div_data->recAt(i);
+		double div_size = rec.value(ftDivSize).toDouble(); // 1 ps
+		int n_papers = rec.value(ftCount).toInt();
+		double f_tax = rec.value(ftNalogSize).toDouble(); //factor by divsize for calc tax
+		QString currency = companyCurrency(rec.value(ftCompany).toInt());
+		double tax = div_size*n_papers*f_tax;
+
+		if (rec.value(ftCompany).toInt() == 1) qDebug()<<rec.toString();
+
+		if (currency == "usd") u_sum += tax;
+		else if (currency == "rur") r_sum += tax;
+		else qWarning()<<QString("BagWidget::statistic_calcTaxSum()  WARNING:  invalid currency %1").arg(currency);
+	}
+	setStatisticRow(6, (-1)*u_sum, (-1)*r_sum);
+}
+void BagWidget::statistic_calcReceivedDivs(const ConfiguratorAbstractData *div_data)
+{
+	if (!div_data) return;
+
+	double b_coupons = 0;
+	double rs_divs = 0;
+	double us_div = 0;
+
+	int n = div_data->count();
+	for (int i=0; i<n; i++)
+	{
+		const ConfiguratorAbstractRecord &rec = div_data->recAt(i);
+		double div_size = rec.value(ftDivSize).toDouble() * rec.value(ftCount).toInt(); //for n ps
+		double f_tax = rec.value(ftNalogSize).toDouble(); //factor by divsize for calc tax
+		if (f_tax > 0) div_size *= (1-f_tax);
+		QString currency = companyCurrency(rec.value(ftCompany).toInt());
+
+		int op_type = rec.value(ftTypeOperation).toInt();
+		switch (op_type)
+		{
+			case opCouponReceive:
+			{
+				b_coupons += div_size;
+				break;
+			}
+			case opDivReceive:
+			{
+				if (currency == "usd") us_div += div_size;
+				else if (currency == "rur") rs_divs += div_size;
+				else qWarning()<<QString("BagWidget::statistic_calcReceivedDivs()  WARNING:  invalid currency %1").arg(currency);
+				break;
+			}
+			default: break;
+		}
+	}
+
+	setStatisticRow(3, ERR_VALUE, b_coupons);
+	setStatisticRow(4, us_div, rs_divs);
+	LStatic::setTableRowColor(m_statisticTable, 3, DIVS_ROW_COLOR);
+	LStatic::setTableRowColor(m_statisticTable, 4, DIVS_ROW_COLOR);
 
 }
-void BagWidget::setStatisticRow(int row, const double &usd_value, const double &rur_value)
+void BagWidget::statistic_calcPaperCount(const ConfiguratorAbstractData *data)
+{
+	if (!data) return;
+
+	int n = data->count();
+	uint b_count = 0;
+	uint rs_count = 0;
+	uint us_count = 0;
+	for (int i=0; i<n; i++)
+	{
+		const ConfiguratorAbstractRecord &rec = data->recAt(i);
+		QString currency = companyCurrency(rec.value(ftCompany).toInt());
+		bool is_cfd = rec.value(ftPaperType).trimmed().toLower().contains("cfd");
+		uint p_count = rec.value(ftCount).toUInt();
+		int type = rec.value(ftTypeOperation).toInt();
+		switch (type)
+		{
+			case opBuy:
+			{
+				if (is_cfd)
+				{
+					if (currency == "usd") us_count += p_count;
+					else if (currency == "rur") rs_count += p_count;
+					else qWarning()<<QString("BagWidget::statistic_calcPaperCount()  WARNING:  invalid currency %1").arg(currency);
+				}
+				else b_count += p_count;
+				break;
+			}
+			case opSell:
+			{
+				if (is_cfd)
+				{
+					if (currency == "usd") us_count -= p_count;
+					else if (currency == "rur") rs_count -= p_count;
+					else qWarning()<<QString("BagWidget::statistic_calcPaperCount()  WARNING:  invalid currency %1").arg(currency);
+				}
+				else b_count -= p_count;
+				break;
+			}
+			default: break;
+		}
+	}
+	setStatisticRow(7, ERR_VALUE, b_count);
+	setStatisticRow(8, us_count, rs_count);
+}
+void BagWidget::statistic_calcBagPrice()
+{
+	int n_rows = tableWidget->rowCount();
+	double r_price = 0;
+	double u_price = 0;
+    for (int i=0; i<n_rows; i++)
+    {
+		QString currency = tableWidget->item(i, 2)->text().trimmed().toLower();
+		double line_price = tableWidget->item(i, 6)->text().trimmed().toDouble();
+		if (currency == "usd") u_price += line_price;
+		else if (currency == "rub") r_price += line_price;
+		else qWarning()<<QString("BagWidget::statistic_calcBagPrice()  WARNING:  invalid currency %1").arg(currency);
+    }
+	setStatisticRow(2, u_price/1000, r_price/1000, 2);
+}
+void BagWidget::setStatisticRow(int row, const double &usd_value, const double &rur_value, quint8 precision)
 {
 	if (row < 0 || row >= m_statisticTable->rowCount()) return;
 
 	QStringList row_data;
-	row_data << QString::number(usd_value, 'f', 1) << QString::number(rur_value, 'f', 1);
+	row_data << ((usd_value == ERR_VALUE) ? QString("---") : QString::number(usd_value, 'f', precision));
+	row_data << ((rur_value == ERR_VALUE) ? QString("---") : QString::number(rur_value, 'f', precision));
 	LStatic::setTableRow(row, m_statisticTable, row_data);
 }
 void BagWidget::slotTimer()
 {
     recalcState();
-    recalcStatistic();
+    recalcStatisticTableData();
     m_search->exec();
     qobject_cast<QTimer*>(sender())->stop();
 }
@@ -287,8 +452,9 @@ void BagWidget::initStatisticTable()
     LStatic::setTableHeaders(m_statisticTable, headers, Qt::Horizontal);
 
     headers.clear();
-    headers << "Payed of buy operations" << "Getted of sell operations" << "Current bag price" << "Received divs" << "Received coupons";
-    headers << "Commission" << "Tax";
+    headers << "Payed of buy operations" << "Getted of sell operations" << "Current bag price (x1000)";
+    headers << "Received coupons (clean)" << "Received divs (clean)";
+    headers << "Commission" << "Tax" << "Bond count" << "Stock count";
     LStatic::setTableHeaders(m_statisticTable, headers, Qt::Vertical);
 
 }

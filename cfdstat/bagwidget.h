@@ -65,7 +65,7 @@ protected:
     void recalcState(const ConfiguratorAbstractRecord&);
     void recalcState();
     void readGeneralData();
-    void recalcStatistic();
+    void recalcStatisticTableData(); //обновление сводной таблицы, выполняется после заполнения таблицы портфеля
 
 public slots:
     void slotBagUpdate(const ConfiguratorAbstractRecord&);
@@ -83,7 +83,16 @@ protected slots:
     void slotWasSearch();
 
 private:
-    void setStatisticRow(int, const double&, const double&);
+    void setStatisticRow(int, const double&, const double&,	quint8 precision = 1);
+
+    //вычисления для заполнения сводной таблицы (статы)
+    void statistic_calcBuySum(const ConfiguratorAbstractData*); //определение суммы потраченной на покупку всех бумаг (вместе с добавленной коммисией)
+    void statistic_calcSellSum(const ConfiguratorAbstractData*); //определение суммы полученной при продаже всех бумаг (с учетом вычтенной коммисии)
+    void statistic_calcPaperCount(const ConfiguratorAbstractData*); //определение текущего количетсва всех бумаг разных типов
+    void statistic_calcBagPrice(); //определение текущей стоимости портфеля (цена всех бумаг на сегодня)
+    void statistic_calcCommissionSum(const ConfiguratorAbstractData*); //определение суммы удержанной коммисии при всех операциях купли/продажи бумаг
+    void statistic_calcTaxSum(const ConfiguratorAbstractData*); //определение суммы налогов, удержанной при выплате дивов
+    void statistic_calcReceivedDivs(const ConfiguratorAbstractData*); //определение суммы всех полученных купонов и дивов (чистая сумма т.е. с учетом вычтенного налога)
 
 };
 

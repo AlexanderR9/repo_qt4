@@ -35,7 +35,7 @@ protected:
     //ftKKS - kks for bond or empty string for CFD
     //ftDateCoupon - date of coupons/divs
     //ftCount -	количество бумаг на дату отсечки ftDateCoupon
-    //ftDivSize - размер выплаты в той валюте в которой покупалась бумага (за 1 шт.)
+    //ftDivSize - размер выплаты в той валюте в которой покупалась бумага (за 1 шт.), полный размер т.е. до удержания налога
     //ftDivDelay - задержка выплаты в днях
     //ftNalogSize - коэффициент налога от ftDivSize (пример 0,13)
     ConfiguratorAbstractData  m_divs;			//история всех дивов и купонов и их размер (расчетные данные)
